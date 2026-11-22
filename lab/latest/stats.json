@@ -1,0 +1,301 @@
+{
+  "at": "2026-11-22T07:13:06.938Z",
+  "sha": "04082fd4b1787709b1ae82198d934a849450dcee",
+  "url": "https://cozy-isle.vercel.app",
+  "devices": {
+    "phone": {
+      "tier": "low",
+      "readyMs": 2711,
+      "overview": {
+        "tier": "low",
+        "dpr": 1,
+        "canvasPixels": 329600,
+        "calls": 3,
+        "triangles": 33730,
+        "peakCalls": 3,
+        "peakTriangles": 33730,
+        "programs": 3,
+        "geometries": 3,
+        "textures": 1,
+        "fpsCloud": 37,
+        "p95ms": 32.6,
+        "jsHeapMb": 13,
+        "frames": 780
+      },
+      "views": {
+        "forest": {
+          "tier": "low",
+          "dpr": 1,
+          "canvasPixels": 329600,
+          "calls": 3,
+          "triangles": 33730,
+          "peakCalls": 3,
+          "peakTriangles": 33730,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 35,
+          "p95ms": 52.5,
+          "jsHeapMb": 13,
+          "frames": 330
+        },
+        "meadow": {
+          "tier": "low",
+          "dpr": 1,
+          "canvasPixels": 329600,
+          "calls": 3,
+          "triangles": 33730,
+          "peakCalls": 3,
+          "peakTriangles": 33730,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 30,
+          "p95ms": 41.4,
+          "jsHeapMb": 13,
+          "frames": 420
+        },
+        "tropics": {
+          "tier": "low",
+          "dpr": 1,
+          "canvasPixels": 329600,
+          "calls": 3,
+          "triangles": 33730,
+          "peakCalls": 3,
+          "peakTriangles": 33730,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 28,
+          "p95ms": 43.5,
+          "jsHeapMb": 13,
+          "frames": 540
+        },
+        "desert": {
+          "tier": "low",
+          "dpr": 1,
+          "canvasPixels": 329600,
+          "calls": 3,
+          "triangles": 33730,
+          "peakCalls": 3,
+          "peakTriangles": 33730,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 34,
+          "p95ms": 53.4,
+          "jsHeapMb": 13,
+          "frames": 660
+        },
+        "reef": {
+          "tier": "low",
+          "dpr": 1,
+          "canvasPixels": 329600,
+          "calls": 3,
+          "triangles": 33730,
+          "peakCalls": 3,
+          "peakTriangles": 33730,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 37,
+          "p95ms": 32.6,
+          "jsHeapMb": 13,
+          "frames": 780
+        }
+      },
+      "parts": {
+        "sky": {
+          "triangles": 1024,
+          "draws": 1
+        },
+        "terrain": {
+          "triangles": 32768,
+          "draws": 1
+        },
+        "ocean": {
+          "triangles": 2,
+          "draws": 1
+        }
+      },
+      "errors": [],
+      "logs": [
+        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      ]
+    },
+    "laptop": {
+      "tier": "medium",
+      "readyMs": 5699,
+      "overview": {
+        "tier": "medium",
+        "dpr": 1,
+        "canvasPixels": 853750,
+        "calls": 3,
+        "triangles": 74690,
+        "peakCalls": 3,
+        "peakTriangles": 74690,
+        "programs": 3,
+        "geometries": 3,
+        "textures": 1,
+        "fpsCloud": 13,
+        "p95ms": 85.2,
+        "jsHeapMb": 20,
+        "frames": 450
+      },
+      "views": {
+        "forest": {
+          "tier": "medium",
+          "dpr": 1,
+          "canvasPixels": 853750,
+          "calls": 3,
+          "triangles": 74690,
+          "peakCalls": 3,
+          "peakTriangles": 74690,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 13,
+          "p95ms": 84.4,
+          "jsHeapMb": 20,
+          "frames": 210
+        },
+        "meadow": {
+          "tier": "medium",
+          "dpr": 1,
+          "canvasPixels": 853750,
+          "calls": 3,
+          "triangles": 74690,
+          "peakCalls": 3,
+          "peakTriangles": 74690,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 14,
+          "p95ms": 96.2,
+          "jsHeapMb": 20,
+          "frames": 270
+        },
+        "tropics": {
+          "tier": "medium",
+          "dpr": 1,
+          "canvasPixels": 853750,
+          "calls": 3,
+          "triangles": 74690,
+          "peakCalls": 3,
+          "peakTriangles": 74690,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 14,
+          "p95ms": 104.3,
+          "jsHeapMb": 20,
+          "frames": 330
+        },
+        "desert": {
+          "tier": "medium",
+          "dpr": 1,
+          "canvasPixels": 853750,
+          "calls": 3,
+          "triangles": 74690,
+          "peakCalls": 3,
+          "peakTriangles": 74690,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 14,
+          "p95ms": 81.7,
+          "jsHeapMb": 20,
+          "frames": 390
+        },
+        "reef": {
+          "tier": "medium",
+          "dpr": 1,
+          "canvasPixels": 853750,
+          "calls": 3,
+          "triangles": 74690,
+          "peakCalls": 3,
+          "peakTriangles": 74690,
+          "programs": 3,
+          "geometries": 3,
+          "textures": 1,
+          "fpsCloud": 13,
+          "p95ms": 85.2,
+          "jsHeapMb": 20,
+          "frames": 450
+        }
+      },
+      "parts": {
+        "sky": {
+          "triangles": 1024,
+          "draws": 1
+        },
+        "terrain": {
+          "triangles": 73728,
+          "draws": 1
+        },
+        "ocean": {
+          "triangles": 2,
+          "draws": 1
+        }
+      },
+      "errors": [],
+      "logs": [
+        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      ]
+    }
+  },
+  "checks": {
+    "phone": {
+      "drawCalls": {
+        "value": 3,
+        "target": 150,
+        "pass": true
+      },
+      "triangles": {
+        "value": 33730,
+        "target": 250000,
+        "pass": true
+      },
+      "canvasPixels": {
+        "value": 329600,
+        "target": 329600,
+        "pass": true
+      },
+      "programs": {
+        "value": 3,
+        "target": 60,
+        "pass": true
+      },
+      "errors": {
+        "value": 0,
+        "target": 0
+      }
+    },
+    "laptop": {
+      "drawCalls": {
+        "value": 3,
+        "target": 250,
+        "pass": true
+      },
+      "triangles": {
+        "value": 74690,
+        "target": 500000,
+        "pass": true
+      },
+      "canvasPixels": {
+        "value": 853750,
+        "target": 853750,
+        "pass": true
+      },
+      "programs": {
+        "value": 3,
+        "target": 80,
+        "pass": true
+      },
+      "errors": {
+        "value": 0,
+        "target": 0
+      }
+    }
+  }
+}

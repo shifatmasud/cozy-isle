@@ -1,0 +1,73 @@
+{
+  "kind": "ESTIMATE",
+  "disclaimer": "Estimated from a cloud run. Not measured on the device. Real FPS is only what the device itself shows.",
+  "confidence": "low (spec-based guesses; use for comparing builds, not as a promise)",
+  "gpuCostSource": "spec-based guess (profile.gpuPrior)",
+  "cpuSource": "fallback CPU slowdown x6 (not calibrated)",
+  "fps": {
+    "best": 60,
+    "likely": 60,
+    "worst": 27,
+    "capHz": 60
+  },
+  "frameMs": {
+    "best": 3.7,
+    "likely": 11.1,
+    "worst": 37,
+    "vsyncMs": 16.7
+  },
+  "bottleneck": "GPU",
+  "device": {
+    "cpuMsPerFrame": 1.8,
+    "gpuMsPerFrame": 11.1,
+    "gpuParts": {
+      "drawsMs": 0.18,
+      "trianglesMs": 0.2,
+      "shadingMs": 10.75,
+      "uploadsMs": 0
+    },
+    "cpuBand": [
+      0.5,
+      2
+    ],
+    "gpuBand": [
+      0.33,
+      3
+    ]
+  },
+  "workload": {
+    "phase": "steady",
+    "frames": 472,
+    "windowSec": 19.2,
+    "cloudFps": 24.5,
+    "drawsPerFrame": 3,
+    "trisPerFrame": 33730,
+    "canvasPixels": 329600,
+    "uploadMbPerFrame": 0,
+    "shadingRefMpPerFrame": 1.85,
+    "shadingCostPerPixel": 5.62,
+    "cloudGpuMsPerFrame": 128.2,
+    "cloudMainMsPerFrame": 1.8
+  },
+  "cloud": {
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "host": "runnervm0hi8g",
+    "coefficients": {
+      "msPerRefMP": 64.671,
+      "msPerMTri": 245.3125,
+      "msPerDraw": 0.0227,
+      "msPerUploadMB": 0.3516
+    }
+  },
+  "deviceCoefficients": {
+    "msPerRefMP": 5.8,
+    "msPerMTri": 6,
+    "msPerDraw": 0.06,
+    "msPerUploadMB": 2
+  },
+  "notes": [],
+  "url": "https://cozy-isle.vercel.app/?lab=1",
+  "deviceId": "phone",
+  "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/phone",
+  "at": "2026-11-22T07:15:07.585Z"
+}
