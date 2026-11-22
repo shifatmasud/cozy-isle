@@ -10,10 +10,54 @@
 // - Underwater: red is absorbed first (teal shift with depth), caustic threads on the sand, teal-blue fog that is
 //   brighter looking up toward the surface and deeper blue looking down (the sky box uses the same waterFogColor()).
 //
-// API kept stable for every builder: cozyMaterial({ color, sway, wrap, rim, aoScale, side }) and the GLSL_COMMON
-// names hash12, vnoise, cozyLight, caustics, underwaterTint, applyFog plus all original uniforms.
-// Added (optional to use): uWaterFog, uWaterDeep uniforms and waterFogColor(dir), cozyLuma(c) helpers.
+// Round 2 (pixel cost; both target devices are fragment-bound):
+// - vnoise() no longer hashes four lattice corners per call. It reads ONE texel of a pre-baked 128x128 lattice
+//   texture (shared.uNoiseTex, repeat-wrapped) at i + smoothstep(f) + 0.5, so the hardware bilinear filter does the
+//   smooth value-noise interpolation (Quilez's "texture noise" trick). Same signature, same 0..1 range, same
+//   smoothness; it tiles every 128 lattice units. vnoise2() returns two independent noises from that one fetch.
+//   Every ShaderMaterial in the project spreads `...shared`, so Terrain, Ocean and Sky get the speed-up for free.
+// - cozyMaterial / leafMaterial: the broad warm/cool patch tint and the whole aerial-perspective fog are computed
+//   per vertex (fogTerms() gives col * mul + add, which is exactly applyFog()), leaving the fragment shader with one
+//   brush fetch, the light, the rim and the underwater branch. Plant/rock triangles are small, so it looks the same.
+// - 'high' tier (setShadingTier('high'), called by App.js before any material exists) keeps per-pixel fog and adds a
+//   second, finer brush octave: richer on strong GPUs. Each run uses one tier, so the program count is unchanged.
+//
+// API kept stable for every builder: cozyMaterial({ color, sway, wrap, rim, aoScale, side }),
+// leafMaterial({ map, color, sway, wrap, rim, trans, cut, aoScale, side }) and the GLSL_COMMON names hash12, vnoise,
+// cozyLight, caustics, underwaterTint, applyFog plus all original uniforms.
+// Also available: uWaterFog, uWaterDeep, uNoiseTex uniforms and waterFogColor(dir), cozyLuma(c), vnoise2(p),
+// fogTerms(wpos, out mul, out add) helpers.
 import * as THREE from 'three';
+
+// ---- Pre-baked noise lattice: 128 x 128 RGBA8, R and G are independent random lattices (B, A spare = R, G shifted).
+const NOISE_N = 128;
+function latticeHash(x, y, s) {
+  let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(s, 1442695041)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+function makeNoiseTexture() {
+  const data = new Uint8Array(NOISE_N * NOISE_N * 4);
+  for (let y = 0; y < NOISE_N; y++) {
+    for (let x = 0; x < NOISE_N; x++) {
+      const o = (y * NOISE_N + x) * 4;
+      data[o] = Math.round(latticeHash(x, y, 1) * 255);
+      data[o + 1] = Math.round(latticeHash(x, y, 2) * 255);
+      data[o + 2] = Math.round(latticeHash(x, y, 3) * 255);
+      data[o + 3] = Math.round(latticeHash(x, y, 4) * 255);
+    }
+  }
+  const t = new THREE.DataTexture(data, NOISE_N, NOISE_N, THREE.RGBAFormat, THREE.UnsignedByteType);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.magFilter = THREE.LinearFilter;
+  t.minFilter = THREE.LinearFilter;
+  t.generateMipmaps = false;
+  t.flipY = false;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
 
 export const shared = {
   uTime: { value: 0 },
@@ -32,7 +76,16 @@ export const shared = {
   // Lagoon water seen from inside: bright teal toward the surface, deep blue below.
   uWaterFog: { value: new THREE.Color('#3aa7b2') },
   uWaterDeep: { value: new THREE.Color('#14557a') },
+  // Lattice for vnoise(): one texel fetch instead of four hashes.
+  uNoiseTex: { value: makeNoiseTexture() },
 };
+
+// Tier switch for the two shared programs. App.js calls this once at start-up, before any component builds materials.
+let shadeHQ = false;
+export function setShadingTier(tier) {
+  shadeHQ = tier === 'high';
+}
+const tierDefines = () => (shadeHQ ? { COZY_HQ: '' } : {});
 
 export const GLSL_COMMON = /* glsl */ `
 uniform float uTime;
@@ -48,17 +101,23 @@ uniform vec2 uWind;
 uniform float uUnderwater;
 uniform vec3 uWaterFog;
 uniform vec3 uWaterDeep;
+uniform sampler2D uNoiseTex;
 
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
   return fract((p3.x + p3.y) * p3.z);
 }
-float vnoise(vec2 p) {
+// Smooth value noise from the 128x128 lattice texture: one bilinear fetch at the smoothstepped position.
+vec2 vnoise2(vec2 p) {
   vec2 i = floor(p);
-  vec2 f = fract(p);
+  vec2 f = p - i;
   vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x), mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
+  i = mod(i, 128.0);
+  return texture2D(uNoiseTex, (i + u + 0.5) * (1.0 / 128.0)).rg;
+}
+float vnoise(vec2 p) {
+  return vnoise2(p).r;
 }
 float cozyLuma(vec3 c) {
   return dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -113,19 +172,31 @@ vec3 waterFogColor(vec3 dir) {
   return mix(uWaterDeep, uWaterFog, smoothstep(0.15, 0.75, up));
 }
 
-// Aerial perspective above water (cooler, then lighter, then horizon haze); teal water fog when the camera is under.
-vec3 applyFog(vec3 col, vec3 wpos) {
+// The whole fog as a linear map: fogged = col * mul + add. Cheap to evaluate per vertex and pass as two varyings.
+// Above water: cooler, then lighter, then the horizon haze. Camera underwater: teal water fog with absorption.
+void fogTerms(vec3 wpos, out vec3 mul, out vec3 add) {
   vec3 toP = wpos - cameraPosition;
   float d = length(toP);
   if (uUnderwater > 0.5) {
     float uf = 1.0 - exp(-max(d - 1.5, 0.0) * 0.032);
-    vec3 absorbed = col * mix(vec3(1.0), vec3(0.55, 0.85, 0.95), clamp(d / 25.0, 0.0, 1.0));
-    return mix(absorbed, waterFogColor(toP / max(d, 0.001)), uf);
+    vec3 absorb = mix(vec3(1.0), vec3(0.55, 0.85, 0.95), clamp(d / 25.0, 0.0, 1.0));
+    mul = absorb * (1.0 - uf);
+    add = waterFogColor(toP / max(d, 0.001)) * uf;
+    return;
   }
-  float cool = smoothstep(uFogNear * 0.4, uFogFar * 0.6, d);
-  col = mix(col, col * vec3(0.84, 0.92, 1.05) + uSkyColor * 0.06, cool * 0.65);
+  float cool = smoothstep(uFogNear * 0.4, uFogFar * 0.6, d) * 0.65;
   float x = clamp((d - uFogNear) / max(uFogFar - uFogNear, 1.0), 0.0, 1.0);
-  return mix(col, uFogColor, x * x * (3.0 - 2.0 * x));
+  x = x * x * (3.0 - 2.0 * x);
+  mul = (vec3(1.0 - cool) + vec3(0.84, 0.92, 1.05) * cool) * (1.0 - x);
+  add = uSkyColor * (0.06 * cool * (1.0 - x)) + uFogColor * x;
+}
+
+// Aerial perspective above water (cooler, then lighter, then horizon haze); teal water fog when the camera is under.
+vec3 applyFog(vec3 col, vec3 wpos) {
+  vec3 mul;
+  vec3 add;
+  fogTerms(wpos, mul, add);
+  return col * mul + add;
 }
 `;
 
@@ -138,6 +209,10 @@ varying vec3 vCol;
 varying vec3 vN;
 varying vec3 vW;
 varying float vAO;
+#ifndef COZY_HQ
+varying vec3 vFogMul;
+varying vec3 vFogAdd;
+#endif
 void main() {
   mat4 im = mat4(1.0);
   #ifdef USE_INSTANCING
@@ -156,8 +231,13 @@ void main() {
   #ifdef USE_INSTANCING_COLOR
   c *= instanceColor;
   #endif
+  // Broad warm/cool patches (20 m scale), like hand-mixed poster colour varying across a hillside.
+  c *= mix(vec3(0.97, 1.0, 1.03), vec3(1.04, 1.0, 0.92), vnoise(w.xz * 0.05 + 3.7));
   vCol = c * uColor;
   vAO = clamp(0.6 + position.y * uAOScale, 0.6, 1.0);
+  #ifndef COZY_HQ
+  fogTerms(w.xyz, vFogMul, vFogAdd);
+  #endif
   gl_Position = projectionMatrix * viewMatrix * w;
 }
 `;
@@ -170,21 +250,34 @@ varying vec3 vCol;
 varying vec3 vN;
 varying vec3 vW;
 varying float vAO;
+#ifndef COZY_HQ
+varying vec3 vFogMul;
+varying vec3 vFogAdd;
+#endif
 void main() {
   vec3 n = normalize(vN);
   if (!gl_FrontFacing) n = -n;
-  // Brush texture: small value strokes plus broad warm/cool patches, like hand-mixed poster colour.
+  // Brush texture: small value strokes (one texel fetch).
+  #ifdef COZY_HQ
+  vec2 bn = vnoise2(vW.xz * 0.9 + vW.y * 0.7);
+  float brush = (bn.x - 0.5) * 0.13 + (vnoise(vW.xz * 2.6 - vW.y * 1.9 + 7.1) - 0.5) * 0.07;
+  #else
   float brush = (vnoise(vW.xz * 0.9 + vW.y * 0.7) - 0.5) * 0.16;
+  #endif
   vec3 base = vCol * (1.0 + brush);
-  base *= mix(vec3(0.97, 1.0, 1.03), vec3(1.04, 1.0, 0.92), vnoise(vW.xz * 0.05 + 3.7));
   vec3 col = cozyLight(base, n, vW, uWrap, vAO);
   // Rim glow, stronger when the sun is behind the leaves (back-lit translucency).
   vec3 V = normalize(cameraPosition - vW);
-  float rim = pow(1.0 - max(dot(n, V), 0.0), 3.0) * uRim;
+  float r1 = 1.0 - max(dot(n, V), 0.0);
+  float rim = r1 * r1 * r1 * uRim;
   float back = 0.55 + 0.45 * max(dot(-V, uSunDir), 0.0);
   col += rim * back * uSunColor * base * 0.8;
   col = underwaterTint(col, vW);
+  #ifdef COZY_HQ
   col = applyFog(col, vW);
+  #else
+  col = col * vFogMul + vFogAdd;
+  #endif
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -202,6 +295,7 @@ export function cozyMaterial({ color = '#ffffff', sway = 0, wrap = 0.5, rim = 0.
     fragmentShader: COZY_FRAG,
     vertexColors: true,
     side,
+    defines: tierDefines(),
     uniforms: {
       ...shared,
       uColor: { value: new THREE.Color(color) },
@@ -217,6 +311,7 @@ export function cozyMaterial({ color = '#ffffff', sway = 0, wrap = 0.5, rim = 0.
 // ---- Painted leaf cards (Ghibli foliage) ----
 // Detail lives in a hand-painted RGBA texture (leaf clusters, fronds, petals, grass tufts), not in triangles.
 // Same program for every leaf texture: the map is a uniform. Alpha is sharpened so leaves stay crisp at distance.
+// The alpha test runs first, so cut-away pixels pay one texture fetch and nothing else.
 const LEAF_VERT = /* glsl */ `
 ${GLSL_COMMON}
 uniform vec3 uColor;
@@ -227,6 +322,10 @@ varying vec3 vCol;
 varying vec3 vN;
 varying vec3 vW;
 varying float vAO;
+#ifndef COZY_HQ
+varying vec3 vFogMul;
+varying vec3 vFogAdd;
+#endif
 void main() {
   mat4 im = mat4(1.0);
   #ifdef USE_INSTANCING
@@ -249,6 +348,9 @@ void main() {
   #endif
   vCol = c * uColor;
   vAO = clamp(0.55 + position.y * uAOScale, 0.55, 1.0);
+  #ifndef COZY_HQ
+  fogTerms(w.xyz, vFogMul, vFogAdd);
+  #endif
   gl_Position = projectionMatrix * viewMatrix * w;
 }
 `;
@@ -265,6 +367,10 @@ varying vec3 vCol;
 varying vec3 vN;
 varying vec3 vW;
 varying float vAO;
+#ifndef COZY_HQ
+varying vec3 vFogMul;
+varying vec3 vFogAdd;
+#endif
 void main() {
   vec4 tex = texture2D(uMap, vUv);
   float a = (tex.a - uCut) / max(fwidth(tex.a), 1e-4) + 0.5;
@@ -276,9 +382,14 @@ void main() {
   vec3 V = normalize(cameraPosition - vW);
   float back = max(dot(-V, uSunDir), 0.0);
   col += base * uSunColor * (uTrans * back * back);
-  col += pow(1.0 - max(dot(n, V), 0.0), 3.0) * uRim * uSunColor * base * 0.6;
+  float r1 = 1.0 - max(dot(n, V), 0.0);
+  col += r1 * r1 * r1 * uRim * uSunColor * base * 0.6;
   col = underwaterTint(col, vW);
+  #ifdef COZY_HQ
   col = applyFog(col, vW);
+  #else
+  col = col * vFogMul + vFogAdd;
+  #endif
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -293,6 +404,7 @@ export function leafMaterial({ map, color = '#ffffff', sway = 0, wrap = 0.7, rim
     fragmentShader: LEAF_FRAG,
     vertexColors: true,
     side,
+    defines: tierDefines(),
     uniforms: {
       ...shared,
       uMap: { value: map },
