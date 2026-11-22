@@ -1,0 +1,39 @@
+[
+  {
+    "waitFor": "window.__cozy && window.__cozy.ready",
+    "timeout": 150000
+  },
+  {
+    "mark": "play"
+  },
+  {
+    "mouseDrag": {
+      "from": [
+        900,
+        320
+      ],
+      "to": [
+        400,
+        330
+      ]
+    }
+  },
+  {
+    "wait": 3000
+  },
+  {
+    "mouseDrag": {
+      "from": [
+        680,
+        200
+      ],
+      "to": [
+        690,
+        420
+      ]
+    }
+  },
+  {
+    "wait": 3000
+  }
+]

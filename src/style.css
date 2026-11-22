@@ -1,0 +1,16 @@
+:root { --ink: #2f3a2b; --paper: #fffaf0; --leaf: #4f8a3c; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #d8ebf3; }
+body { font-family: 'Zen Maru Gothic', ui-rounded, 'Segoe UI', system-ui, sans-serif; color: var(--ink); }
+canvas { display: block; touch-action: none; }
+.ui { position: fixed; inset: 0; pointer-events: none; }
+.card { position: absolute; left: 16px; bottom: 16px; max-width: min(360px, calc(100vw - 32px)); background: rgba(255, 250, 240, 0.86); border-radius: 14px; padding: 14px 16px; pointer-events: auto; box-shadow: 0 6px 24px rgba(47, 58, 43, 0.18); }
+.card h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+.card p { margin: 0 0 10px; font-size: 13px; opacity: 0.75; }
+.views { display: flex; flex-wrap: wrap; gap: 6px; }
+.views button { font: inherit; font-size: 13px; border: 0; border-radius: 999px; padding: 7px 12px; background: #e9efdc; color: var(--ink); cursor: pointer; }
+.views button.on { background: var(--leaf); color: #fff; }
+.tier { position: absolute; right: 12px; top: 12px; display: flex; gap: 4px; pointer-events: auto; background: rgba(255, 250, 240, 0.8); border-radius: 999px; padding: 4px; }
+.tier a { font-size: 12px; padding: 4px 10px; border-radius: 999px; color: var(--ink); text-decoration: none; }
+.tier a.on { background: var(--ink); color: #fff; }
+.debug { position: fixed; top: 52px; right: 12px; white-space: pre; font: 11px/1.45 ui-monospace, Menlo, monospace; background: rgba(20, 24, 20, 0.78); color: #e8f5d8; padding: 8px 10px; border-radius: 8px; pointer-events: none; }
+@media (max-width: 480px) { .card { padding: 10px 12px; } .card h1 { font-size: 18px; } .card p { display: none; } }
