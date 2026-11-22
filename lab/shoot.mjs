@@ -28,12 +28,13 @@ for (const d of DEVICES) {
   const t0 = Date.now();
   let readyMs = null;
   try {
-    await page.goto(`${URL}/?q=${d.q}&debug=1&lab=1`, { waitUntil: 'load', timeout: 120000 });
+    await page.goto(`${URL}/?q=${d.q}&lab=1`, { waitUntil: 'load', timeout: 120000 });
     await page.waitForFunction(() => window.__cozy && window.__cozy.ready, null, { timeout: 150000 });
     readyMs = Date.now() - t0;
   } catch (e) {
     logs.push('not ready: ' + e.message.slice(0, 300));
   }
+  await page.addStyleTag({ content: '.ui, .debug { display: none !important; }' }).catch(() => {});
   await page.waitForTimeout(3000);
   await page.screenshot({ path: `${OUT}/${d.id}.png` });
   const views = {};
