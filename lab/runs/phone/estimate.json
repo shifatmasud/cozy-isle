@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x6 (not calibrated)",
   "fps": {
-    "best": 55.7,
-    "likely": 18.4,
-    "worst": 5.6,
+    "best": 60,
+    "likely": 27.9,
+    "worst": 8.3,
     "capHz": 60
   },
   "frameMs": {
-    "best": 18,
-    "likely": 54.4,
-    "worst": 179.9,
+    "best": 11.8,
+    "likely": 35.9,
+    "worst": 120.9,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 8.3,
-    "gpuMsPerFrame": 54.4,
+    "cpuMsPerFrame": 6.6,
+    "gpuMsPerFrame": 35.9,
     "gpuParts": {
       "drawsMs": 2.46,
-      "trianglesMs": 1.53,
-      "shadingMs": 50.45,
+      "trianglesMs": 1.46,
+      "shadingMs": 31.96,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 56,
-    "windowSec": 19.3,
-    "cloudFps": 2.9,
+    "frames": 118,
+    "windowSec": 19.2,
+    "cloudFps": 6.1,
     "drawsPerFrame": 41,
-    "trisPerFrame": 254705,
-    "canvasPixels": 329600,
+    "trisPerFrame": 243131,
+    "canvasPixels": 229792,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 8.7,
-    "shadingCostPerPixel": 26.39,
-    "cloudGpuMsPerFrame": 1069.3,
-    "cloudMainMsPerFrame": 9.2
+    "shadingRefMpPerFrame": 5.51,
+    "shadingCostPerPixel": 23.98,
+    "cloudGpuMsPerFrame": 504.3,
+    "cloudMainMsPerFrame": 6.5
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
     "host": "runnervm0hi8g",
     "coefficients": {
-      "msPerRefMP": 110.2686,
-      "msPerMTri": 428.125,
-      "msPerDraw": 0.0289,
-      "msPerUploadMB": 0.5859
+      "msPerRefMP": 78.0821,
+      "msPerMTri": 300,
+      "msPerDraw": 0.0281,
+      "msPerUploadMB": 0.4688
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "phone",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/phone",
-  "at": "2026-11-22T10:48:31.955Z"
+  "at": "2026-11-22T10:57:07.543Z"
 }
