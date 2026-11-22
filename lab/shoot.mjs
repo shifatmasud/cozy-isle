@@ -40,7 +40,7 @@ for (const d of DEVICES) {
   for (const stop of STOPS) {
     const ok = await page.evaluate((v) => !!(window.__cozy && window.__cozy.view && window.__cozy.view(v, true)), stop).catch(() => false);
     if (!ok) break;
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(4000);
     await page.screenshot({ path: `${OUT}/${d.id}-${stop}.jpg`, type: 'jpeg', quality: 78 });
     views[stop] = await page.evaluate(() => (window.__cozy ? window.__cozy.stats : null)).catch(() => null);
   }

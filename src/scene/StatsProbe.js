@@ -44,7 +44,10 @@ export default function StatsProbe({ tier }) {
         frames: a.frames,
       };
     }
-    if (a.frames === 90) window.__cozy.ready = true;
+    if (a.frames === 12) {
+      window.__cozy.ready = true;
+      window.__cozy.readyAt = performance.now();
+    }
   });
   return null;
 }

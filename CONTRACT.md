@@ -15,6 +15,13 @@ Coordinator merges and pushes. Builders only edit the files they own.
 - Wrap all work in `useMemo` and dispose geometry/materials in `useEffect` cleanup.
 - Export one default component taking `{ Q, tier }`.
 
+## Detail (Shifat's priority: nothing low-poly; high-detail Studio Ghibli foliage and leaves)
+- Detail comes from **hand-painted leaf textures**, not extra triangles. Paint them in code with `paintTexture(key, draw)` and `brush` from `src/materials/leafTex.js` (Canvas 2D: leaf clusters, needle sprays, fronds, petals, grass tufts, bark strokes).
+- Draw them with `leafMaterial({ map, color, sway, wrap, rim, trans, cut })` from `shading.js` (one shared program for every map). Geometry needs uv: build with `paintUV()`.
+- Ghibli canopies = clumps of crossed/fanned leaf cards on a soft blob, spherified normals, light tops, cool violet-blue undersides, a few leaves breaking the silhouette. Never visible facets: smooth normals, enough radial segments on trunks and stems, rounded rocks.
+- Preview every texture: run the same `draw()` in run_javascript with `require('canvas')` (createCanvas), save a PNG under tmp/, and look at it with file_read_image. Iterate until it reads like a Ghibli background painting.
+- Leaf cards use alpha cut-out, which costs pixels on the phone: prefer fewer, larger, richly painted cards over many small ones; no more than ~3 layers of cards over any screen pixel.
+
 ## Budgets (low tier = Galaxy M02s, the hard one)
 | File | draws | triangles (low) | triangles (medium) |
 |---|---|---|---|

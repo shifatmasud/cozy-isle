@@ -212,3 +212,97 @@ export function cozyMaterial({ color = '#ffffff', sway = 0, wrap = 0.5, rim = 0.
     },
   });
 }
+
+
+// ---- Painted leaf cards (Ghibli foliage) ----
+// Detail lives in a hand-painted RGBA texture (leaf clusters, fronds, petals, grass tufts), not in triangles.
+// Same program for every leaf texture: the map is a uniform. Alpha is sharpened so leaves stay crisp at distance.
+const LEAF_VERT = /* glsl */ `
+${GLSL_COMMON}
+uniform vec3 uColor;
+uniform float uSway;
+uniform float uAOScale;
+varying vec2 vUv;
+varying vec3 vCol;
+varying vec3 vN;
+varying vec3 vW;
+varying float vAO;
+void main() {
+  mat4 im = mat4(1.0);
+  #ifdef USE_INSTANCING
+  im = instanceMatrix;
+  #endif
+  vec4 w = modelMatrix * im * vec4(position, 1.0);
+  float sway = uSway * max(position.y, 0.0);
+  float ph = w.x * 0.07 + w.z * 0.05;
+  w.xz += uWind * sway * (sin(uTime * 1.3 + ph) * 0.6 + sin(uTime * 2.7 + ph * 2.3) * 0.25);
+  w.y += uSway * 0.15 * sin(uTime * 3.1 + ph * 3.0) * max(position.y, 0.0);
+  vW = w.xyz;
+  vUv = uv;
+  vN = normalize(mat3(modelMatrix) * mat3(im) * normal);
+  vec3 c = vec3(1.0);
+  #ifdef USE_COLOR
+  c = color;
+  #endif
+  #ifdef USE_INSTANCING_COLOR
+  c *= instanceColor;
+  #endif
+  vCol = c * uColor;
+  vAO = clamp(0.55 + position.y * uAOScale, 0.55, 1.0);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}
+`;
+
+const LEAF_FRAG = /* glsl */ `
+${GLSL_COMMON}
+uniform sampler2D uMap;
+uniform float uCut;
+uniform float uWrap;
+uniform float uRim;
+uniform float uTrans;
+varying vec2 vUv;
+varying vec3 vCol;
+varying vec3 vN;
+varying vec3 vW;
+varying float vAO;
+void main() {
+  vec4 tex = texture2D(uMap, vUv);
+  float a = (tex.a - uCut) / max(fwidth(tex.a), 1e-4) + 0.5;
+  if (a < 0.5) discard;
+  vec3 n = normalize(vN);
+  if (!gl_FrontFacing) n = -n;
+  vec3 base = tex.rgb * vCol;
+  vec3 col = cozyLight(base, n, vW, uWrap, vAO);
+  vec3 V = normalize(cameraPosition - vW);
+  float back = max(dot(-V, uSunDir), 0.0);
+  col += base * uSunColor * (uTrans * back * back);
+  col += pow(1.0 - max(dot(n, V), 0.0), 3.0) * uRim * uSunColor * base * 0.6;
+  col = underwaterTint(col, vW);
+  col = applyFog(col, vW);
+  gl_FragColor = vec4(col, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+// map: a THREE.Texture from paintTexture() (src/materials/leafTex.js). Geometry needs uv (use paintUV()).
+// color tints the painted colours. trans: back-lit glow through leaves (0..1). cut: alpha threshold.
+export function leafMaterial({ map, color = '#ffffff', sway = 0, wrap = 0.7, rim = 0.2, trans = 0.35, cut = 0.5, aoScale = 0.08, side = THREE.DoubleSide } = {}) {
+  return new THREE.ShaderMaterial({
+    vertexShader: LEAF_VERT,
+    fragmentShader: LEAF_FRAG,
+    vertexColors: true,
+    side,
+    uniforms: {
+      ...shared,
+      uMap: { value: map },
+      uColor: { value: new THREE.Color(color) },
+      uSway: { value: sway },
+      uWrap: { value: wrap },
+      uRim: { value: rim },
+      uTrans: { value: trans },
+      uCut: { value: cut },
+      uAOScale: { value: aoScale },
+    },
+  });
+}

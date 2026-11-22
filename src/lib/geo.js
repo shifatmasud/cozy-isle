@@ -21,6 +21,26 @@ export function paint(geometry, color) {
   return g;
 }
 
+// Like paint() but keeps uv (needed by leafMaterial). Pieces merged together must all use paintUV.
+export function paintUV(geometry, color) {
+  let g = geometry.index ? geometry.toNonIndexed() : geometry;
+  for (const name of Object.keys(g.attributes)) {
+    if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
+  }
+  if (!g.attributes.normal) g.computeVertexNormals();
+  if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+  const c = new THREE.Color(color);
+  const n = g.attributes.position.count;
+  const arr = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    arr[i * 3] = c.r;
+    arr[i * 3 + 1] = c.g;
+    arr[i * 3 + 2] = c.b;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+  return g;
+}
+
 // Ghibli "fluffy" canopy trick: point normals away from a centre so lumpy shapes shade like one soft cloud.
 export function spherifyNormals(geometry, center = new THREE.Vector3(), amount = 1) {
   const p = geometry.attributes.position;
