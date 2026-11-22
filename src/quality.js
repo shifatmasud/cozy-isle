@@ -6,7 +6,7 @@
 export const TIERS = {
   low: {
     boulders: 64, mesaRocks: 18, cliffRocks: 36,
-    pixelBudget: 329600, antialias: false, terrainSeg: 128, cloudOctaves: 3,
+    pixelBudget: 329600, antialias: false, terrainSeg: 112, cloudOctaves: 3,
     grass: 12000, flowers: 1600, ferns: 220,
     pine: 150, oak: 60, birch: 55, bushes: 200,
     palms: 60, lowPalms: 50, banana: 36, monstera: 60, cactus: 55,
@@ -14,7 +14,7 @@ export const TIERS = {
   },
   medium: {
     boulders: 140, mesaRocks: 36, cliffRocks: 76,
-    pixelBudget: 853750, antialias: false, terrainSeg: 192, cloudOctaves: 4,
+    pixelBudget: 853750, antialias: false, terrainSeg: 168, cloudOctaves: 4,
     grass: 30000, flowers: 3800, ferns: 450,
     pine: 240, oak: 110, birch: 95, bushes: 380,
     palms: 100, lowPalms: 85, banana: 64, monstera: 110, cactus: 95,
