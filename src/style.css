@@ -1,16 +1,121 @@
-:root { --ink: #2f3a2b; --paper: #fffaf0; --leaf: #4f8a3c; }
-html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #d8ebf3; }
-body { font-family: 'Zen Maru Gothic', ui-rounded, 'Segoe UI', system-ui, sans-serif; color: var(--ink); }
+/* Cozy Isle UI: warm paper, leaf green, ink brown-green; soft shadows. Mobile first (412 x 800), roomy at 1366 x 625. */
+:root {
+  --ink: #2f3a2b;
+  --ink-soft: rgba(47, 58, 43, 0.68);
+  --paper: #fffaf0;
+  --paper-glass: rgba(255, 250, 240, 0.92);
+  --leaf: #4f8a3c;
+  --leaf-deep: #3d7330;
+  --moss: #e6eed6;
+  --sky: #dbe8ec;
+  --shadow: 0 8px 28px rgba(47, 58, 43, 0.18), 0 1px 3px rgba(47, 58, 43, 0.12);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: var(--sky); }
+body {
+  font-family: 'Zen Maru Gothic', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
 canvas { display: block; touch-action: none; }
-.ui { position: fixed; inset: 0; pointer-events: none; }
-.card { position: absolute; left: 16px; bottom: 16px; max-width: min(360px, calc(100vw - 32px)); background: rgba(255, 250, 240, 0.86); border-radius: 14px; padding: 14px 16px; pointer-events: auto; box-shadow: 0 6px 24px rgba(47, 58, 43, 0.18); }
-.card h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
-.card p { margin: 0 0 10px; font-size: 13px; opacity: 0.75; }
-.views { display: flex; flex-wrap: wrap; gap: 6px; }
-.views button { font: inherit; font-size: 13px; border: 0; border-radius: 999px; padding: 7px 12px; background: #e9efdc; color: var(--ink); cursor: pointer; }
-.views button.on { background: var(--leaf); color: #fff; }
-.tier { position: absolute; right: 12px; top: 12px; display: flex; gap: 4px; pointer-events: auto; background: rgba(255, 250, 240, 0.8); border-radius: 999px; padding: 4px; }
-.tier a { font-size: 12px; padding: 4px 10px; border-radius: 999px; color: var(--ink); text-decoration: none; }
-.tier a.on { background: var(--ink); color: #fff; }
-.debug { position: fixed; top: 52px; right: 12px; white-space: pre; font: 11px/1.45 ui-monospace, Menlo, monospace; background: rgba(20, 24, 20, 0.78); color: #e8f5d8; padding: 8px 10px; border-radius: 8px; pointer-events: none; }
-@media (max-width: 480px) { .card { padding: 10px 12px; } .card h1 { font-size: 18px; } .card p { display: none; } }
+button { font: inherit; color: inherit; }
+
+.ui { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+
+/* ---------- loading veil: a painted morning sky ---------- */
+.veil {
+  position: absolute; inset: 0; pointer-events: auto; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(120% 70% at 70% 18%, rgba(255, 243, 220, 0.9) 0%, rgba(255, 243, 220, 0) 55%),
+    linear-gradient(180deg, #5aa2e0 0%, #8fc6ef 38%, #cfe5f0 72%, #f1eedc 100%);
+}
+.veil-inner { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 24px; }
+.veil-cloud { position: relative; width: 132px; height: 62px; margin-bottom: 6px; filter: drop-shadow(0 8px 14px rgba(90, 110, 170, 0.25)); }
+.veil-cloud::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 24px; border-radius: 12px; background: #fff; box-shadow: inset 0 -6px 0 #dde3f4; }
+.veil-cloud .puff { position: absolute; bottom: 10px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff 60%, #e9ecf8 100%); }
+.veil-cloud .p1 { left: 14px; width: 48px; height: 48px; }
+.veil-cloud .p2 { left: 44px; width: 60px; height: 60px; bottom: 8px; }
+.veil-cloud .p3 { left: 86px; width: 38px; height: 38px; }
+.veil-title { font-size: 30px; font-weight: 700; letter-spacing: 0.02em; color: #fffaf0; text-shadow: 0 2px 10px rgba(40, 80, 140, 0.35); }
+.veil-msg { min-height: 20px; font-size: 14px; color: rgba(255, 250, 240, 0.95); text-shadow: 0 1px 6px rgba(40, 80, 140, 0.35); }
+.veil-msg span { display: inline-block; }
+.veil-dots { display: flex; gap: 6px; margin-top: 2px; }
+.veil-dots span { width: 7px; height: 7px; border-radius: 50%; background: #fffaf0; display: block; }
+
+/* ---------- place card (mobile: bottom sheet) ---------- */
+.card {
+  position: absolute;
+  left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); bottom: calc(10px + var(--safe-b));
+  background: var(--paper-glass);
+  /* no backdrop-filter: blurring a live WebGL canvas every frame is costly on Adreno 506 */
+  border-radius: 18px; padding: 6px 12px 10px;
+  pointer-events: auto; box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+.card.closed { right: auto; padding-bottom: 6px; }
+.card-head {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: 0; padding: 4px 2px; cursor: pointer; text-align: left;
+}
+.card-head h1 { margin: 0; font-size: 18px; font-weight: 700; flex: 1; line-height: 1.2; }
+.card.closed .card-head h1 { flex: none; padding-right: 4px; }
+.leaf { width: 14px; height: 14px; border-radius: 0 70% 0 70%; background: linear-gradient(135deg, #8cc152, var(--leaf-deep)); flex: none; }
+.chev { width: 8px; height: 8px; border-right: 2px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft); transform: rotate(45deg) translateY(-2px); transition: transform 0.25s ease; flex: none; margin-right: 4px; }
+.chev.up { transform: rotate(-135deg) translateY(-1px); }
+.card-head:focus-visible, .views button:focus-visible, .tier a:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; border-radius: 10px; }
+.card-body { overflow: hidden; }
+.caption { margin: 2px 2px 8px; font-size: 13px; color: var(--ink-soft); min-height: 18px; }
+.caption span { display: inline-block; }
+.hint { margin: 8px 2px 0; font-size: 11.5px; color: var(--ink-soft); opacity: 0.85; }
+
+.views { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.views button {
+  position: relative; border: 0; border-radius: 999px; padding: 8px 6px; min-height: 36px;
+  background: var(--moss); color: var(--ink); cursor: pointer; font-size: 13.5px; font-weight: 500;
+  overflow: hidden; isolation: isolate; touch-action: manipulation;
+}
+.views button .pill { position: absolute; inset: 0; border-radius: 999px; background: var(--leaf); z-index: 0; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12); }
+.views button .label { position: relative; z-index: 1; }
+.views button.on { color: #fffaf0; }
+
+/* ---------- tier switch ---------- */
+.tier {
+  position: absolute; right: calc(10px + var(--safe-r)); top: calc(10px + var(--safe-t));
+  display: flex; gap: 2px; pointer-events: auto;
+  background: var(--paper-glass); border-radius: 999px; padding: 3px; box-shadow: 0 3px 12px rgba(47, 58, 43, 0.14);
+}
+.tier a { font-size: 11.5px; padding: 4px 9px; border-radius: 999px; color: var(--ink); text-decoration: none; }
+.tier a.on { background: var(--ink); color: #fffaf0; }
+
+/* ---------- debug ---------- */
+.debug {
+  position: fixed; top: calc(48px + var(--safe-t)); right: 10px; z-index: 3; max-width: calc(100vw - 20px);
+  white-space: pre; overflow: hidden; font: 10.5px/1.45 ui-monospace, Menlo, Consolas, monospace;
+  background: rgba(20, 24, 20, 0.78); color: #e8f5d8; padding: 8px 10px; border-radius: 8px; pointer-events: none;
+}
+
+/* ---------- larger screens: compact card bottom-left ---------- */
+@media (min-width: 640px) {
+  .card { left: calc(16px + var(--safe-l)); right: auto; bottom: calc(16px + var(--safe-b)); width: 340px; padding: 8px 14px 12px; }
+  .card-head h1 { font-size: 21px; }
+  .caption { font-size: 13.5px; }
+  .tier { right: 14px; top: 14px; }
+  .tier a { font-size: 12px; padding: 4px 10px; }
+  .debug { font-size: 11px; top: 54px; right: 14px; }
+}
+/* short landscape windows (1366 x 625 and phones turned sideways) */
+@media (max-height: 520px) {
+  .card { bottom: 8px; padding-top: 4px; padding-bottom: 8px; }
+  .views { grid-template-columns: repeat(6, auto); }
+  .views button { padding: 6px 10px; min-height: 30px; }
+  .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chev { transition: none; }
+}

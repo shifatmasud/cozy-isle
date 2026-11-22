@@ -40,7 +40,7 @@ export default function App() {
         flat: true,
         gl: { antialias: Q.antialias, powerPreference: 'high-performance', stencil: false, alpha: false },
         camera: { fov: 45, near: 0.5, far: 2400, position: [220, 140, 220] },
-        onCreated: ({ gl }) => gl.setClearColor('#d8ebf3'),
+        onCreated: ({ gl }) => gl.setClearColor('#dbe8ec'),
       },
       h(Clock),
       part('sky', Sky),

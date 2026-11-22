@@ -41,11 +41,7 @@ export function shapeAt(x, z) {
 
 // Exact height. Expensive: use sampleField() in loops.
 export function heightAt(x, z) {
-  return heightShaped(x, z, shapeAt(x, z));
-}
-
-function heightShaped(x, z, shape) {
-  const { ang, d } = shape;
+  const { ang, d } = shapeAt(x, z);
   const wD = sector(ang, BIOME_ANGLE.desert, 0.6);
   const wT = sector(ang, BIOME_ANGLE.tropical, 0.6);
   const inland = smoothstep(0.98, 0.55, d);
@@ -56,9 +52,9 @@ function heightShaped(x, z, shape) {
   // Mountain in the north.
   const mx = x + 10;
   const mz = z + 78;
-  const mount = Math.exp(-(mx * mx + mz * mz) / (2 * 40 * 40));
+  const mount = Math.exp(-(mx * mx + mz * mz) / (2 * 34 * 34));
   const ridge = 1 - Math.abs(valueNoise(x * 0.045, z * 0.045, 21) * 2 - 1);
-  land += mount * (34 + 10 * ridge);
+  land += mount * (46 + 14 * ridge);
 
   // Desert mesas in the west.
   const mesaN = fbm(x * 0.03 - 9, z * 0.03 + 5, 3, 31);
@@ -92,34 +88,27 @@ export function getField() {
   const half = WORLD_SIZE / 2;
   const f = { res: FIELD_RES, n, cell };
   for (const k of KEYS) f[k] = new Float32Array(n * n);
-  const angs = new Float32Array(n * n);
   for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) {
-      const x = -half + i * cell;
-      const z = -half + j * cell;
-      const shape = shapeAt(x, z);
-      angs[j * n + i] = shape.ang;
-      f.d[j * n + i] = shape.d;
-      f.h[j * n + i] = heightShaped(x, z, shape);
-    }
+    for (let i = 0; i < n; i++) f.h[j * n + i] = heightAt(-half + i * cell, -half + j * cell);
   }
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const k = j * n + i;
+      const x = -half + i * cell;
+      const z = -half + j * cell;
       const h = f.h[k];
       const hx = f.h[j * n + Math.min(n - 1, i + 1)] - f.h[j * n + Math.max(0, i - 1)];
       const hz = f.h[Math.min(n - 1, j + 1) * n + i] - f.h[Math.max(0, j - 1) * n + i];
       const slope = Math.min(1, Math.hypot(hx, hz) / (2 * cell));
-      const ang = angs[k];
-      const d = f.d[k];
-      let forest = sector(ang, BIOME_ANGLE.forest, 0.75) + 0.8 * smoothstep(14, 26, h);
+      const { ang, d } = shapeAt(x, z);
+      let forest = sector(ang, BIOME_ANGLE.forest, 0.7) + 0.6 * smoothstep(18, 30, h);
       let tropical = sector(ang, BIOME_ANGLE.tropical, 0.55);
       let desert = sector(ang, BIOME_ANGLE.desert, 0.5);
       let meadow = sector(ang, BIOME_ANGLE.meadow, 0.7) + 0.9 * smoothstep(0.5, 0.2, d);
       const sum = forest + tropical + desert + meadow + 1e-6;
       forest /= sum; tropical /= sum; desert /= sum; meadow /= sum;
       const beach = smoothstep(2.2, 1.0, h) * smoothstep(-0.6, 0.2, h) * smoothstep(0.7, 0.9, d);
-      const rock = Math.max(smoothstep(0.8, 1.25, slope), smoothstep(40, 50, h));
+      const rock = Math.max(smoothstep(0.55, 0.85, slope), smoothstep(42, 52, h));
       const under = smoothstep(0.1, -0.8, h);
       const landW = (1 - beach) * (1 - rock) * (1 - under);
       f.slope[k] = slope;
@@ -130,6 +119,7 @@ export function getField() {
       f.beach[k] = beach * (1 - under);
       f.rock[k] = rock * (1 - under);
       f.under[k] = under;
+      f.d[k] = d;
     }
   }
   FIELD = f;
