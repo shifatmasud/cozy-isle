@@ -1,26 +1,26 @@
 {
-  "at": "2026-11-22T07:38:56.149Z",
-  "sha": "4d2ce31e5e5a292f5ad482c21e15e9fe05af3108",
+  "at": "2026-11-22T07:50:09.263Z",
+  "sha": "ead4248bfc45b0ce631bc97a3efc41e01f29c53d",
   "url": "https://cozy-isle.vercel.app",
   "devices": {
     "phone": {
       "tier": "low",
-      "readyMs": 23513,
+      "readyMs": 16003,
       "overview": {
         "tier": "low",
         "dpr": 1,
         "canvasPixels": 329600,
         "calls": 41,
-        "triangles": 254705,
+        "triangles": 243131,
         "peakCalls": 41,
-        "peakTriangles": 254705,
+        "peakTriangles": 243131,
         "programs": 5,
         "geometries": 41,
         "textures": 1,
-        "fpsCloud": 4,
-        "p95ms": 559.7,
-        "jsHeapMb": 20,
-        "frames": 300
+        "fpsCloud": 5,
+        "p95ms": 404.7,
+        "jsHeapMb": 25,
+        "frames": 330
       },
       "views": {
         "forest": {
@@ -28,15 +28,15 @@
           "dpr": 1,
           "canvasPixels": 329600,
           "calls": 23,
-          "triangles": 202685,
+          "triangles": 191111,
           "peakCalls": 41,
-          "peakTriangles": 254705,
+          "peakTriangles": 243131,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 3,
-          "p95ms": 741.8,
-          "jsHeapMb": 20,
+          "fpsCloud": 5,
+          "p95ms": 447,
+          "jsHeapMb": 25,
           "frames": 150
         },
         "meadow": {
@@ -44,15 +44,15 @@
           "dpr": 1,
           "canvasPixels": 329600,
           "calls": 29,
-          "triangles": 223807,
+          "triangles": 212233,
           "peakCalls": 41,
-          "peakTriangles": 254705,
+          "peakTriangles": 243131,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 4,
-          "p95ms": 577.9,
-          "jsHeapMb": 20,
+          "fpsCloud": 6,
+          "p95ms": 403.2,
+          "jsHeapMb": 25,
           "frames": 210
         },
         "tropics": {
@@ -60,15 +60,15 @@
           "dpr": 1,
           "canvasPixels": 329600,
           "calls": 40,
-          "triangles": 254103,
+          "triangles": 242529,
           "peakCalls": 41,
-          "peakTriangles": 254705,
+          "peakTriangles": 243131,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 4,
-          "p95ms": 591,
-          "jsHeapMb": 20,
+          "fpsCloud": 5,
+          "p95ms": 359.7,
+          "jsHeapMb": 25,
           "frames": 240
         },
         "desert": {
@@ -76,32 +76,32 @@
           "dpr": 1,
           "canvasPixels": 329600,
           "calls": 29,
-          "triangles": 223807,
+          "triangles": 212233,
           "peakCalls": 41,
-          "peakTriangles": 254705,
+          "peakTriangles": 243131,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 4,
-          "p95ms": 530.5,
-          "jsHeapMb": 20,
-          "frames": 270
+          "fpsCloud": 5,
+          "p95ms": 395.1,
+          "jsHeapMb": 25,
+          "frames": 300
         },
         "reef": {
           "tier": "low",
           "dpr": 1,
           "canvasPixels": 329600,
           "calls": 41,
-          "triangles": 254705,
+          "triangles": 243131,
           "peakCalls": 41,
-          "peakTriangles": 254705,
+          "peakTriangles": 243131,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 4,
-          "p95ms": 559.7,
-          "jsHeapMb": 20,
-          "frames": 300
+          "fpsCloud": 5,
+          "p95ms": 404.7,
+          "jsHeapMb": 25,
+          "frames": 330
         }
       },
       "parts": {
@@ -112,12 +112,12 @@
         },
         "ocean": {
           "draws": 1,
-          "triangles": 17664,
+          "triangles": 13770,
           "programs": 1
         },
         "terrain": {
           "draws": 4,
-          "triangles": 44102,
+          "triangles": 36422,
           "programs": 2
         },
         "temperate": {
@@ -181,21 +181,21 @@
     },
     "laptop": {
       "tier": "medium",
-      "readyMs": 49800,
+      "readyMs": 36958,
       "overview": {
         "tier": "medium",
         "dpr": 1,
         "canvasPixels": 853750,
         "calls": 41,
-        "triangles": 514690,
+        "triangles": 488468,
         "peakCalls": 41,
-        "peakTriangles": 514690,
+        "peakTriangles": 488468,
         "programs": 5,
         "geometries": 41,
         "textures": 1,
-        "fpsCloud": 1,
-        "p95ms": 1435.3,
-        "jsHeapMb": 17,
+        "fpsCloud": 2,
+        "p95ms": 1238.6,
+        "jsHeapMb": 16,
         "frames": 270
       },
       "views": {
@@ -204,15 +204,15 @@
           "dpr": 1,
           "canvasPixels": 853750,
           "calls": 32,
-          "triangles": 480520,
+          "triangles": 454298,
           "peakCalls": 41,
-          "peakTriangles": 514690,
+          "peakTriangles": 488468,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 1,
-          "p95ms": 1463.3,
-          "jsHeapMb": 17,
+          "fpsCloud": 2,
+          "p95ms": 1013,
+          "jsHeapMb": 16,
           "frames": 150
         },
         "meadow": {
@@ -220,15 +220,15 @@
           "dpr": 1,
           "canvasPixels": 853750,
           "calls": 41,
-          "triangles": 514690,
+          "triangles": 488468,
           "peakCalls": 41,
-          "peakTriangles": 514690,
+          "peakTriangles": 488468,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 1,
-          "p95ms": 1446.4,
-          "jsHeapMb": 17,
+          "fpsCloud": 2,
+          "p95ms": 999.9,
+          "jsHeapMb": 16,
           "frames": 180
         },
         "tropics": {
@@ -236,15 +236,15 @@
           "dpr": 1,
           "canvasPixels": 853750,
           "calls": 41,
-          "triangles": 514690,
+          "triangles": 488468,
           "peakCalls": 41,
-          "peakTriangles": 514690,
+          "peakTriangles": 488468,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 1,
-          "p95ms": 1143.4,
-          "jsHeapMb": 17,
+          "fpsCloud": 2,
+          "p95ms": 940.8,
+          "jsHeapMb": 16,
           "frames": 210
         },
         "desert": {
@@ -252,15 +252,15 @@
           "dpr": 1,
           "canvasPixels": 853750,
           "calls": 41,
-          "triangles": 514690,
+          "triangles": 488468,
           "peakCalls": 41,
-          "peakTriangles": 514690,
+          "peakTriangles": 488468,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 1,
-          "p95ms": 1453.5,
-          "jsHeapMb": 17,
+          "fpsCloud": 2,
+          "p95ms": 1238.6,
+          "jsHeapMb": 16,
           "frames": 240
         },
         "reef": {
@@ -268,15 +268,15 @@
           "dpr": 1,
           "canvasPixels": 853750,
           "calls": 41,
-          "triangles": 514690,
+          "triangles": 488468,
           "peakCalls": 41,
-          "peakTriangles": 514690,
+          "peakTriangles": 488468,
           "programs": 5,
           "geometries": 41,
           "textures": 1,
-          "fpsCloud": 1,
-          "p95ms": 1435.3,
-          "jsHeapMb": 17,
+          "fpsCloud": 2,
+          "p95ms": 1238.6,
+          "jsHeapMb": 16,
           "frames": 270
         }
       },
@@ -288,12 +288,12 @@
         },
         "ocean": {
           "draws": 1,
-          "triangles": 39192,
+          "triangles": 30250,
           "programs": 1
         },
         "terrain": {
           "draws": 4,
-          "triangles": 97809,
+          "triangles": 80529,
           "programs": 2
         },
         "temperate": {
@@ -364,9 +364,9 @@
         "pass": true
       },
       "triangles": {
-        "value": 254705,
+        "value": 243131,
         "target": 250000,
-        "pass": false
+        "pass": true
       },
       "canvasPixels": {
         "value": 329600,
@@ -390,9 +390,9 @@
         "pass": true
       },
       "triangles": {
-        "value": 514690,
+        "value": 488468,
         "target": 500000,
-        "pass": false
+        "pass": true
       },
       "canvasPixels": {
         "value": 853750,

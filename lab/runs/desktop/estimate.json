@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x4 (not calibrated)",
   "fps": {
-    "best": 32.3,
-    "likely": 10.7,
-    "worst": 3.5,
+    "best": 40.4,
+    "likely": 13.3,
+    "worst": 4.2,
     "capHz": 60
   },
   "frameMs": {
-    "best": 31,
-    "likely": 93.9,
-    "worst": 289.5,
+    "best": 24.8,
+    "likely": 75.1,
+    "worst": 236.2,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 3.9,
-    "gpuMsPerFrame": 93.9,
+    "cpuMsPerFrame": 5.5,
+    "gpuMsPerFrame": 75.1,
     "gpuParts": {
       "drawsMs": 1.23,
-      "trianglesMs": 2.57,
-      "shadingMs": 90.07,
+      "trianglesMs": 2.44,
+      "shadingMs": 71.39,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 23,
+    "frames": 33,
     "windowSec": 19.2,
-    "cloudFps": 1.2,
+    "cloudFps": 1.7,
     "drawsPerFrame": 41,
-    "trisPerFrame": 514690,
+    "trisPerFrame": 488468,
     "canvasPixels": 853750,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 22.52,
-    "shadingCostPerPixel": 26.38,
-    "cloudGpuMsPerFrame": 2714.8,
-    "cloudMainMsPerFrame": 6.7
+    "shadingRefMpPerFrame": 17.85,
+    "shadingCostPerPixel": 20.91,
+    "cloudGpuMsPerFrame": 1876.4,
+    "cloudMainMsPerFrame": 7.7
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
     "host": "runnervm0hi8g",
     "coefficients": {
-      "msPerRefMP": 110.8646,
-      "msPerMTri": 421.875,
-      "msPerDraw": 0.0281,
-      "msPerUploadMB": 0.5664
+      "msPerRefMP": 95.9635,
+      "msPerMTri": 332.8125,
+      "msPerDraw": 0.0242,
+      "msPerUploadMB": 0.4883
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "desktop",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/desktop",
-  "at": "2026-11-22T07:47:59.813Z"
+  "at": "2026-11-22T07:57:03.556Z"
 }
