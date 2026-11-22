@@ -1,3 +1,5 @@
+// Round 2: painted Ghibli gouache atlas (pinnate palm fronds, torn banana paddles, fenestrated monstera,
+// ribbed cactus skin with spine areoles, flowers) on smooth bent cards and round tubes; leafMaterial program.
 // Tropical plants: coconut palms, low palms, banana mats, monstera clumps and desert cacti.
 // Painted-mass approach: each plant is a few soft sheets and tubes with baked vertex-colour masses
 // (light rachis / midribs, warm saturated blades, cool grooves), per-instance colour + size jitter,
@@ -26,8 +28,9 @@ import { createElement as h, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { scatter, sampleField, normalAt, clump, shapeAt, BIOME_ANGLE } from '../world/island.js';
 import { smoothstep, mulberry32, valueNoise } from '../world/noise.js';
-import { cozyMaterial } from '../materials/shading.js';
-import { paint, merge, makeInstanced, spherifyNormals, triangles, report } from '../lib/geo.js';
+import { cozyMaterial, leafMaterial } from '../materials/shading.js';
+import { paintTexture } from '../materials/leafTex.js';
+import { paint, paintUV, merge, makeInstanced, spherifyNormals, triangles, report } from '../lib/geo.js';
 
 const TAU = Math.PI * 2;
 
@@ -108,266 +111,582 @@ const P = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// Geometry builder: indexed, smooth normals, then non-indexed (position, normal, color) so pieces
-// merge with paint()-ed primitives.
+// Painted atlas (previewed in Node: tmp/tex/r2_tropical/atlas_v2.png)
+// Tropical atlas painter (shared by preview and Tropical.js). 1024 canvas, 4 quadrants of 512.
+// Q0 (0,0) palm frond | Q1 (512,0) banana leaf | Q2 (0,512) monstera | Q3 (512,512) cactus ribs + pad/flower column
+function curvedLeaf(ctx, x0, y0, cx, cy, x1, y1, w, fill, shade, edge) {
+  const N = 12;
+  const L = [];
+  const R = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const a = (1 - t) * (1 - t);
+    const b = 2 * (1 - t) * t;
+    const c = t * t;
+    const x = a * x0 + b * cx + c * x1;
+    const y = a * y0 + b * cy + c * y1;
+    const dx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx);
+    const dy = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
+    const l = Math.hypot(dx, dy) || 1;
+    const ww = w * Math.pow(Math.sin(Math.PI * Math.min(1, 0.06 + t * 0.98)), 0.75);
+    L.push([x - (dy / l) * ww, y + (dx / l) * ww]);
+    R.push([x + (dy / l) * ww, y - (dx / l) * ww]);
+  }
+  const path = (A, B) => {
+    ctx.beginPath();
+    ctx.moveTo(A[0][0], A[0][1]);
+    for (const p of A) ctx.lineTo(p[0], p[1]);
+    for (let i = B.length - 1; i >= 0; i--) ctx.lineTo(B[i][0], B[i][1]);
+    ctx.closePath();
+  };
+  const S = L.map((p, i) => [(p[0] + R[i][0]) / 2, (p[1] + R[i][1]) / 2]);
+  path(L, R);
+  ctx.fillStyle = shade;
+  ctx.fill();
+  path(L, S);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (edge) {
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 7; i <= N; i++) ctx[i === 7 ? 'moveTo' : 'lineTo'](L[i][0], L[i][1]);
+    ctx.stroke();
+  }
+}
+
+function drawFrond(ctx, rand) {
+  // rachis from bottom centre to top, leaflets sweep toward the tip and droop
+  const rx = (t) => 256 + Math.sin(t * 2.2) * 6;
+  const ry = (t) => 506 - t * 494;
+  for (let pass = 0; pass < 2; pass++) {
+    for (let t = 0.03; t < 0.98; t += 0.026) {
+      for (const sd of [-1, 1]) {
+        if (pass === 0 && rand() < 0.5) continue;
+        const x = rx(t);
+        const y = ry(t);
+        const len = 250 * Math.pow(Math.sin(Math.PI * (0.08 + t * 0.9)), 0.65) * (0.88 + rand() * 0.18) * (pass ? 1 : 0.92);
+        const up = 0.3 + t * 0.55 + (rand() - 0.5) * 0.15; // angle toward tip
+        const dx = sd * Math.cos(up) * len;
+        const dy = -Math.sin(up) * len * 0.6;
+        const droop = len * (0.35 + rand() * 0.1);
+        const tip = [x + dx, y + dy + droop * 0.75];
+        const ctl = [x + dx * 0.55, y + dy * 0.9 - droop * 0.1];
+        const k = rand();
+        const lit = pass ? `hsl(${80 + k * 16},${42 + k * 10}%,${44 + t * 8 + k * 6}%)` : `hsl(${150 + k * 12},32%,${30 + k * 5}%)`;
+        const shade = pass ? `hsl(${150 + k * 14},${34 + k * 8}%,${31 + k * 5}%)` : `hsl(${205 + k * 15},26%,${26 + k * 4}%)`;
+        curvedLeaf(ctx, x, y, ctl[0], ctl[1], tip[0], tip[1], 6.5 + rand() * 2.5, lit, shade, pass ? `hsla(52,75%,70%,${0.5 + k * 0.4})` : null);
+      }
+    }
+  }
+  // rachis: pale ochre, lit stroke over a cool underside
+  ctx.lineCap = 'round';
+  for (const [w, c] of [[9, '#6f7d52'], [5, '#d8cf80']]) {
+    ctx.strokeStyle = c;
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    for (let t = 0; t <= 1.001; t += 0.05) ctx[t === 0 ? 'moveTo' : 'lineTo'](rx(t) - (w < 6 ? 1.5 : 0), ry(t));
+    ctx.stroke();
+  }
+}
+
+function drawBanana(ctx, rand) {
+  const cx = 256;
+  const hw = (t) => (t < 0.06 ? 0.04 : 196 * Math.pow(Math.sin(Math.PI * Math.min(1, (t - 0.04) / 0.98)), 0.55) * (0.75 + 0.25 * Math.min(1, t * 3)));
+  const yAt = (t) => 504 - t * 496;
+  ctx.beginPath();
+  for (let t = 0; t <= 1.0001; t += 0.02) ctx.lineTo(cx - hw(t), yAt(t));
+  for (let t = 1; t >= 0; t -= 0.02) ctx.lineTo(cx + hw(t), yAt(t));
+  ctx.closePath();
+  const g = ctx.createLinearGradient(30, 0, 482, 0);
+  g.addColorStop(0, '#7fc25a');
+  g.addColorStop(0.47, '#a8d46a');
+  g.addColorStop(0.53, '#5fa65a');
+  g.addColorStop(1, '#2f7a62');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  // soft gouache patches
+  for (let i = 0; i < 90; i++) {
+    const x = 30 + rand() * 452;
+    const y = 10 + rand() * 490;
+    const r = 18 + rand() * 40;
+    const gg = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const c = x < cx ? `hsla(${80 + rand() * 20},55%,${55 + rand() * 10}%,0.35)` : `hsla(${170 + rand() * 40},35%,${30 + rand() * 8}%,0.35)`;
+    gg.addColorStop(0, c);
+    gg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gg;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // parallel side veins
+  for (let y = 20; y < 500; y += 7 + rand() * 3) {
+    for (const sd of [-1, 1]) {
+      ctx.strokeStyle = sd < 0 ? `hsla(70,60%,78%,${0.25 + rand() * 0.2})` : `hsla(190,40%,22%,${0.25 + rand() * 0.2})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx + sd * 6, y);
+      ctx.quadraticCurveTo(cx + sd * 120, y - 22, cx + sd * 240, y - 60);
+      ctx.stroke();
+    }
+  }
+  // dry ochre edge
+  ctx.strokeStyle = 'rgba(190,160,80,0.55)';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  for (let t = 0.5; t <= 1.0001; t += 0.02) ctx.lineTo(cx + hw(t) - 1, yAt(t));
+  ctx.stroke();
+  ctx.restore();
+  // torn slits along the veins (cut into the alpha)
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 22; i++) {
+    const sd = i % 2 ? 1 : -1;
+    const t = 0.18 + rand() * 0.75;
+    const y = yAt(t);
+    const e = hw(t);
+    const depth = e * (0.3 + rand() * 0.55);
+    ctx.lineWidth = 2.5 + rand() * 3;
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(cx + sd * (e + 8), y - 60 * (e / 240) + 4);
+    ctx.lineTo(cx + sd * (e - depth), y - 60 * ((e - depth) / 240) + 2);
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // pale midrib
+  ctx.lineCap = 'round';
+  for (const [w, c] of [[14, '#8aa560'], [8, '#e8ecb0']]) {
+    ctx.strokeStyle = c;
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(cx, 508);
+    ctx.lineTo(cx, 14);
+    ctx.stroke();
+  }
+}
+
+function drawMonstera(ctx, rand) {
+  // heart: sinus at bottom centre (petiole junction), tip at top
+  const cx = 256;
+  const cy = 440;
+  const rOf = (th) => 410 * (0.5 * Math.pow(1 + Math.cos(th), 0.85) + 0.04);
+  const pt = (th, k = 1) => [cx + Math.sin(th) * rOf(th) * 0.62 * k, cy - Math.cos(th) * rOf(th) * k];
+  ctx.beginPath();
+  for (let th = -Math.PI * 0.92; th <= Math.PI * 0.92; th += 0.04) {
+    const p = pt(th);
+    ctx.lineTo(p[0], p[1]);
+  }
+  ctx.closePath();
+  const g = ctx.createLinearGradient(40, 40, 470, 470);
+  g.addColorStop(0, '#5aa85a');
+  g.addColorStop(0.5, '#2f8048');
+  g.addColorStop(1, '#1f5a5a');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  // glossy highlight sweep and cool shade patches
+  for (let i = 0; i < 60; i++) {
+    const x = 40 + rand() * 430;
+    const y = 30 + rand() * 420;
+    const r = 15 + rand() * 35;
+    const gg = ctx.createRadialGradient(x, y, 0, x, y, r);
+    gg.addColorStop(0, x + y < 520 ? 'hsla(95,50%,62%,0.3)' : 'hsla(200,35%,25%,0.3)');
+    gg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gg;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+    // side veins
+  const K = 6;
+  for (const sd of [-1, 1]) {
+    for (let k = 1; k <= K; k++) {
+      const th = sd * (k / (K + 0.6)) * Math.PI * 0.9;
+      const o = pt(th, 0.98);
+      ctx.strokeStyle = 'rgba(150,200,120,0.75)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - rOf(th) * 0.12);
+      ctx.quadraticCurveTo((cx + o[0]) / 2, (cy + o[1]) / 2 - 20, o[0], o[1]);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  // fenestrations: splits between veins from the margin, and oval holes near the midrib
+  ctx.globalCompositeOperation = 'destination-out';
+  for (const sd of [-1, 1]) {
+    for (let k = 1; k <= K; k++) {
+      const th = sd * ((k + 0.5) / (K + 0.6)) * Math.PI * 0.9;
+      const o = pt(th, 1.05);
+      const i = pt(th, 0.58 + rand() * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(o[0] - 5, o[1]);
+      ctx.lineTo(o[0] + 5, o[1]);
+      ctx.lineTo(i[0], i[1]);
+      ctx.closePath();
+      ctx.fill();
+      if (k < K) {
+        const hpt = pt(th, 0.42);
+        ctx.beginPath();
+        ctx.ellipse(hpt[0], hpt[1], 7 + rand() * 4, 13 + rand() * 6, th * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.strokeStyle = '#a8d48a';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + 6);
+  ctx.quadraticCurveTo(cx - 8, 250, cx, 40);
+  ctx.stroke();
+}
+
+function drawCactus(ctx, rand) {
+  // 6 ribs across 384px (crest lit, groove cool), spine areoles on crests
+  const W = 384;
+  ctx.fillStyle = '#5f8a5c';
+  ctx.fillRect(0, 0, W, 512);
+  for (let r = 0; r < 6; r++) {
+    const x0 = r * 64;
+    const g = ctx.createLinearGradient(x0, 0, x0 + 64, 0);
+    g.addColorStop(0, '#3c6258');
+    g.addColorStop(0.35, '#86ad6a');
+    g.addColorStop(0.5, '#a9c97c');
+    g.addColorStop(0.7, '#6f9a60');
+    g.addColorStop(1, '#3c6258');
+    ctx.fillStyle = g;
+    ctx.fillRect(x0, 0, 64, 512);
+  }
+  for (let i = 0; i < 260; i++) {
+    ctx.fillStyle = `hsla(${rand() < 0.5 ? 90 : 190},30%,${rand() < 0.5 ? 70 : 28}%,0.12)`;
+    ctx.fillRect(rand() * W, rand() * 512, 3 + rand() * 5, 20 + rand() * 50);
+  }
+  for (let r = 0; r < 6; r++) {
+    for (let y = 8 + (r % 2) * 10; y < 512; y += 22) {
+      const x = r * 64 + 32;
+      ctx.strokeStyle = 'rgba(245,235,200,0.8)';
+      ctx.lineWidth = 1.2;
+      for (let s = 0; s < 5; s++) {
+        const a = rand() * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(a) * 7, y + Math.sin(a) * 7);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#efe6c0';
+      ctx.beginPath();
+      ctx.arc(x, y, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // right column (x 384..512): pad, pink flower, yellow flower, cream flower blocks of 128
+  const X = 384;
+  const pg = ctx.createRadialGradient(X + 50, 45, 5, X + 64, 64, 90);
+  pg.addColorStop(0, '#b8d47e');
+  pg.addColorStop(0.6, '#7fa85a');
+  pg.addColorStop(1, '#4a7658');
+  ctx.fillStyle = pg;
+  ctx.fillRect(X, 0, 128, 128);
+  for (let i = 0; i < 18; i++) {
+    const x = X + 10 + rand() * 108;
+    const y = 10 + rand() * 108;
+    ctx.fillStyle = '#e9dca8';
+    ctx.beginPath();
+    ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const flowers = [['#f6a6c0', '#d4507e', '#f7e07a'], ['#ffe27a', '#e8a838', '#c87a2a'], ['#fbf4dc', '#d8cfa8', '#f2d050']];
+  flowers.forEach(([lit, shade, mid], f) => {
+    const y0 = 128 * (f + 1);
+    ctx.fillStyle = shade;
+    ctx.fillRect(X, y0, 128, 128);
+    for (let p = 0; p < 10; p++) {
+      const a = (p / 10) * Math.PI * 2;
+      curvedLeaf(ctx, X + 64, y0 + 64, X + 64 + Math.cos(a) * 40, y0 + 64 + Math.sin(a) * 40, X + 64 + Math.cos(a) * 62, y0 + 64 + Math.sin(a) * 62, 13, lit, shade, null);
+    }
+    ctx.fillStyle = mid;
+    ctx.beginPath();
+    ctx.arc(X + 64, y0 + 64, 14, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawTropicalAtlas(ctx, size, rand) {
+  const q = size / 2;
+  const s = q / 512;
+  const at = (x, y, fn) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.beginPath();
+    ctx.rect(0, 0, 512, 512);
+    ctx.clip();
+    fn(ctx, rand);
+    ctx.restore();
+  };
+  at(0, 0, drawFrond);
+  at(q, 0, drawBanana);
+  at(0, q, drawMonstera);
+  at(q, q, drawCactus);
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Atlas UV rects (canvas px of the 1024 atlas -> uv; CanvasTexture flips Y so v = 1 - y / 1024).
+// ---------------------------------------------------------------------------------------------
+const AT = 1024;
+const uvPx = (x, y) => [x / AT, 1 - y / AT];
+const UV_PETIOLE = uvPx(512 + 256, 260); // pale banana midrib: solid, pale green
+const UV_RACHIS = uvPx(256, 470);
+
+// ---------------------------------------------------------------------------------------------
+// Builder: indexed geometry with colour + uv (+ optional explicit normals), returned non-indexed.
 // ---------------------------------------------------------------------------------------------
 class Builder {
   constructor() {
     this.p = [];
     this.c = [];
+    this.u = [];
+    this.n = [];
     this.i = [];
   }
-  v(p, c) {
+  v(p, c, uv, n) {
     this.p.push(p[0], p[1], p[2]);
     this.c.push(c[0], c[1], c[2]);
+    this.u.push(uv ? uv[0] : 0, uv ? uv[1] : 0);
+    if (n) this.n.push(n[0], n[1], n[2]);
     return this.p.length / 3 - 1;
   }
   tri(a, b, c) {
     this.i.push(a, b, c);
   }
-  geometry() {
+  geometry(withUV = true) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(this.c, 3));
+    if (withUV) g.setAttribute('uv', new THREE.Float32BufferAttribute(this.u, 2));
     g.setIndex(this.i);
-    g.computeVertexNormals();
+    if (this.n.length === this.p.length) g.setAttribute('normal', new THREE.Float32BufferAttribute(this.n, 3));
+    else g.computeVertexNormals();
     const out = g.toNonIndexed();
     g.dispose();
     return out;
   }
 }
 
-// Connect two rows of vertex indices: equal length -> quads, next row of 1 -> fan to a tip.
 function connectRows(B, A, C) {
   if (C.length === A.length) {
     for (let k = 0; k < A.length - 1; k++) {
-      const a = A[k];
-      const b = A[k + 1];
-      const c = C[k];
-      const d = C[k + 1];
-      B.tri(a, c, b);
-      B.tri(b, c, d);
+      B.tri(A[k], C[k], A[k + 1]);
+      B.tri(A[k + 1], C[k], C[k + 1]);
     }
   } else if (C.length === 1) {
     for (let k = 0; k < A.length - 1; k++) B.tri(A[k], C[0], A[k + 1]);
   }
 }
 
-// Ring tube along a path (parallel-transported frame). rib 0..1 alternates vertex radius for ribs.
-// colorFn(i, k, n) -> rgb. apex: length of the closing cone past the last ring (0 = open).
-function tube(B, pts, radii, S, colorFn, opt = {}) {
+// Smooth round tube along a path with analytic (radial) normals, a seam-duplicated ring for uv and a
+// rounded dome cap. colorFn(t, a) -> rgb with t 0..1 along, a 0..1 around. uvr: [u0, u1, v0, v1] or null.
+function tube(B, pts, radii, S, colorFn, uvr, cap = 0) {
   const n = pts.length;
-  const rib = opt.rib || 0;
   let u = null;
   let T = [0, 1, 0];
+  let w = null;
   const rings = [];
+  const ring = (c, r, t, nk) => {
+    const row = [];
+    for (let k = 0; k <= S; k++) {
+      const a = k / S;
+      const ang = a * TAU;
+      const rad = add(scl(u, Math.cos(ang)), scl(w, Math.sin(ang)));
+      const nn = norm(add(scl(rad, 1 - nk), scl(T, nk)));
+      const uv = uvr ? [uvr[0] + (uvr[1] - uvr[0]) * a, uvr[2] + (uvr[3] - uvr[2]) * Math.min(1, t)] : null;
+      row.push(B.v(add(c, scl(rad, r)), colorFn(Math.min(1, t), a), uv, nn));
+    }
+    return row;
+  };
   for (let i = 0; i < n; i++) {
-    const a = pts[Math.max(0, i - 1)];
-    const b = pts[Math.min(n - 1, i + 1)];
-    T = norm(sub(b, a));
-    if (!u) {
-      const ref = Math.abs(T[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1];
-      u = norm(cross(T, ref));
-    } else {
-      u = norm(sub(u, scl(T, dot(u, T))));
-    }
-    const w = cross(u, T);
-    const ring = [];
-    for (let k = 0; k < S; k++) {
-      const ang = (k / S) * TAU + (opt.twist || 0) * i;
-      const rr = radii[i] * (rib && k % 2 ? 1 - rib : 1);
-      const p = add(pts[i], add(scl(u, Math.cos(ang) * rr), scl(w, Math.sin(ang) * rr)));
-      ring.push(B.v(p, colorFn(i, k, n)));
-    }
-    rings.push(ring);
+    T = norm(sub(pts[Math.min(n - 1, i + 1)], pts[Math.max(0, i - 1)]));
+    if (!u) u = norm(cross(T, Math.abs(T[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1]));
+    else u = norm(sub(u, scl(T, dot(u, T))));
+    w = cross(u, T);
+    rings.push(ring(pts[i], radii[i], i / (n - 1), 0));
   }
-  for (let i = 0; i < n - 1; i++) {
-    for (let k = 0; k < S; k++) {
-      const k2 = (k + 1) % S;
-      const a = rings[i][k];
-      const b = rings[i][k2];
-      const c = rings[i + 1][k];
-      const d = rings[i + 1][k2];
-      B.tri(a, c, b);
-      B.tri(b, c, d);
-    }
+  if (cap > 0) {
+    const e = pts[n - 1];
+    const r = radii[n - 1];
+    rings.push(ring(add(e, scl(T, cap * 0.55)), r * 0.78, 1.0, 0.45));
+    rings.push(ring(add(e, scl(T, cap * 0.9)), r * 0.4, 1.0, 0.8));
   }
-  if (opt.apex) {
-    const ap = B.v(add(pts[n - 1], scl(T, opt.apex)), opt.apexColor || colorFn(n - 1, 0, n));
-    const top = rings[n - 1];
-    for (let k = 0; k < S; k++) B.tri(top[k], ap, top[(k + 1) % S]);
+  for (let i = 0; i < rings.length - 1; i++) connectRows(B, rings[i], rings[i + 1]);
+  if (cap > 0) {
+    const last = rings[rings.length - 1];
+    const ap = B.v(add(pts[n - 1], scl(T, cap)), colorFn(1, 0), uvr ? [(uvr[0] + uvr[1]) / 2, uvr[3]] : null, T);
+    for (let k = 0; k < S; k++) B.tri(last[k], ap, last[k + 1]);
   }
   return rings;
 }
 
-// Pinnate / paddle leaf strip with a raised midrib and edges folded down (inverted V).
-// spec: { base, az, e0, droop, L, ts: [0..1 row stations], wl: [left half-widths], wr: [right], fold,
-//         color(row, part) part 0 = left edge, 1 = rib, 2 = right edge, tipColor }
-// The last station is a single tip vertex.
+// Painted leaf card along a bending spine: 3 vertices across (left edge, raised midrib, right edge,
+// edges folded down by `fold`), last station a single tip vertex. uv: [uL, uR, vBase, vTip].
 function leafStrip(B, spec) {
   const hd = [Math.cos(spec.az), 0, Math.sin(spec.az)];
   const side = [-Math.sin(spec.az), 0, Math.cos(spec.az)];
   const n = spec.ts.length;
+  const [uL, uR, v0, v1] = spec.uv;
+  const uM = (uL + uR) / 2;
+  const dp = spec.droopPow || 1.4;
   let p = spec.base.slice();
   let prev = null;
   for (let s = 0; s < n; s++) {
     const t = spec.ts[s];
     if (s > 0) {
       const tm = (spec.ts[s - 1] + t) * 0.5;
-      const e = spec.e0 - spec.droop * Math.pow(tm, spec.droopPow || 1.4);
+      const e = spec.e0 - spec.droop * Math.pow(tm, dp);
       const step = spec.L * (t - spec.ts[s - 1]);
       p = add(p, add(scl(hd, Math.cos(e) * step), [0, Math.sin(e) * step, 0]));
     }
+    const v = v0 + (v1 - v0) * t;
+    const col = spec.color(t);
     let row;
     if (s === n - 1) {
-      row = [B.v(p, spec.tipColor)];
+      row = [B.v(p, col, [uM, v])];
     } else {
-      const e = spec.e0 - spec.droop * Math.pow(t, spec.droopPow || 1.4);
+      const e = spec.e0 - spec.droop * Math.pow(t, dp);
       const f = add(scl(hd, Math.cos(e)), [0, Math.sin(e), 0]);
       const up = norm(cross(side, f));
+      const twist = (spec.twist || 0) * t;
       const cf = Math.cos(spec.fold);
       const sf = Math.sin(spec.fold);
-      const wl = spec.wl[s];
-      const wr = spec.wr[s];
-      const L = add(p, add(scl(side, -wl * cf), scl(up, -wl * sf)));
-      const R = add(p, add(scl(side, wr * cf), scl(up, -wr * sf)));
-      row = [B.v(L, spec.color(s, 0)), B.v(p, spec.color(s, 1)), B.v(R, spec.color(s, 2))];
+      const W = spec.w[s];
+      const sl = add(scl(side, Math.cos(twist)), scl(up, Math.sin(twist)));
+      const ul = norm(cross(sl, f));
+      const L = add(p, add(scl(sl, -W * cf), scl(ul, -W * sf)));
+      const R = add(p, add(scl(sl, W * cf), scl(ul, -W * sf)));
+      row = [B.v(L, col, [uL, v]), B.v(add(p, scl(ul, W * 0.04)), mulC(col, 1.06), [uM, v]), B.v(R, col, [uR, v])];
     }
     if (prev) connectRows(B, prev, row);
     prev = row;
   }
 }
 
-function icoPiece(radius, color, center, sx = 1, sy = 1, sz = 1) {
-  const g = paint(new THREE.IcosahedronGeometry(radius, 0), color);
-  spherifyNormals(g, new THREE.Vector3(), 1);
-  g.scale(sx, sy, sz);
-  g.translate(center[0], center[1], center[2]);
-  return g;
+// Small flattened round bead with uv onto an atlas block (flowers, fruit, pads). Non-indexed, uv kept.
+function bead(r, seg, color, center, sc, uvr) {
+  const g = new THREE.SphereGeometry(r, seg + 2, seg);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uvr[0] + (uvr[1] - uvr[0]) * uv.getX(i), uvr[2] + (uvr[3] - uvr[2]) * uv.getY(i));
+  const out = paintUV(g, '#ffffff');
+  const cl = out.attributes.color;
+  for (let i = 0; i < cl.count; i++) cl.setXYZ(i, color[0], color[1], color[2]);
+  out.scale(sc[0], sc[1], sc[2]);
+  out.translate(center[0], center[1], center[2]);
+  return out;
 }
-function tetraPiece(radius, color, center) {
-  const g = paint(new THREE.TetrahedronGeometry(radius, 0), color);
-  spherifyNormals(g, new THREE.Vector3(), 0.7);
-  g.rotateX(0.6);
-  g.translate(center[0], center[1], center[2]);
-  return g;
-}
-function toColor(rgb) {
-  const c = new THREE.Color();
-  c.setRGB(rgb[0], rgb[1], rgb[2]);
-  return c;
-}
+// cactus atlas blocks
+const UV_RIBS = [512 / AT, 896 / AT, 0.02, 0.48];
+const blockUV = (b) => {
+  const y0 = 512 + b * 128;
+  return [(896 + 6) / AT, (1024 - 6) / AT, 1 - (y0 + 122) / AT, 1 - (y0 + 6) / AT];
+};
+const UV_PAD = blockUV(0);
+const UV_PINK = blockUV(1);
+const UV_YELLOW = blockUV(2);
+const UV_CREAM = blockUV(3);
 
 // ---------------------------------------------------------------------------------------------
-// Coconut palm: curved ringed trunk (+ coconuts) and a crown of 7 arching fronds.
-// Local frame: trunk leans toward +x; the placement yaw turns +x to face the sea.
+// Coconut palm: smooth ringed trunk (painted leaf-scar rings in vertex colour) + coconut cluster,
+// crown of long painted pinnate frond cards. Local frame: trunk leans to +x (placement faces the sea).
 // ---------------------------------------------------------------------------------------------
 const PALM_H = 8.0;
 const PALM_BEND = 0.17;
-function palmPoint(t) {
-  return [PALM_BEND * PALM_H * Math.pow(t, 1.8), PALM_H * t, 0];
-}
+const palmPoint = (t) => [PALM_BEND * PALM_H * Math.pow(t, 1.8), PALM_H * t, 0];
 const PALM_TOP = palmPoint(1);
 
-function palmTrunkGeometry() {
+function palmTrunkGeometry(hi) {
   const B = new Builder();
-  const ts = [0, 0.04, 0.2, 0.4, 0.6, 0.8, 1];
+  const rows = hi ? 7 : 6;
+  const ts = [];
+  for (let i = 0; i <= rows; i++) ts.push(i / rows);
   const pts = ts.map((t) => palmPoint(t));
   pts[0] = [0, -0.4, 0];
-  // Swollen bole at the base, slim and even up the stem, a slight crownshaft bulge.
   const radii = ts.map((t) => 0.19 + 0.17 * Math.pow(1 - t, 5) + (t > 0.95 ? 0.03 : 0));
-  tube(
-    B,
-    pts,
-    radii,
-    6,
-    (i, k, n) => {
-      const t = i / (n - 1);
-      let c = mixC(P.trunkBase, P.trunk, smoothstep(0, 0.35, t));
-      c = mixC(c, P.trunkTop, smoothstep(0.8, 1, t));
-      // leaf-scar rings: alternate ring rows light/dark
-      if (i % 2) c = mixC(c, P.trunkRing, 0.6);
-      return mulC(c, 0.94 + 0.12 * valueNoise(k * 1.3, i * 2.1, 81));
-    },
-    { apex: 0.18, apexColor: P.trunkTop }
-  );
-  const trunk = B.geometry();
+  const rings = hi ? 22 : 16; // painted leaf-scar rings (colour bands between vertex rows blend softly)
+  tube(B, pts, radii, 6, (t, a) => {
+    let c = mixC(P.trunkBase, P.trunk, smoothstep(0, 0.35, t));
+    c = mixC(c, P.trunkTop, smoothstep(0.82, 1, t));
+    const ring = 0.5 + 0.5 * Math.cos(t * rings * TAU);
+    c = mixC(c, P.trunkRing, ring * 0.55);
+    return mulC(c, 0.93 + 0.14 * valueNoise(a * 6, t * 9, 81));
+  }, null, 0.2);
+  const trunk = B.geometry(false);
   const T = PALM_TOP;
-  const nuts = [
-    icoPiece(0.17, '#ffffff', [T[0] + 0.22, T[1] - 0.22, 0.1], 1, 1.1, 1),
-    icoPiece(0.16, '#ffffff', [T[0] - 0.05, T[1] - 0.26, 0.24], 1, 1.1, 1),
-  ];
-  const cn = [P.nutGreen, mixC(P.nutGreen, P.nutBrown, 0.6)];
-  nuts.forEach((g, j) => {
+  const nuts = [];
+  const nutSpots = [[0.24, -0.2, 0.08], [-0.04, -0.27, 0.25], [0.1, -0.3, -0.2]];
+  for (let j = 0; j < (hi ? 3 : 2); j++) {
+    const g = paint(new THREE.IcosahedronGeometry(0.17, 0), '#ffffff');
+    spherifyNormals(g, new THREE.Vector3(), 1);
+    g.scale(1, 1.12, 1);
+    g.translate(T[0] + nutSpots[j][0], T[1] + nutSpots[j][1], nutSpots[j][2]);
+    const cn = mixC(P.nutGreen, P.nutBrown, j * 0.45);
     const cl = g.attributes.color;
-    for (let i = 0; i < cl.count; i++) cl.setXYZ(i, cn[j][0], cn[j][1], cn[j][2]);
-  });
+    const p = g.attributes.position;
+    for (let i = 0; i < cl.count; i++) {
+      const c = mixC(mulC(cn, 0.75), mulC(cn, 1.15), smoothstep(T[1] - 0.45, T[1] - 0.05, p.getY(i)));
+      cl.setXYZ(i, c[0], c[1], c[2]);
+    }
+    nuts.push(g);
+  }
   return merge([trunk, ...nuts]);
 }
 
-// Frond layout: young fronds stand up near the top, old ones hang low (one yellowing olive frond).
 const PALM_FRONDS = [
   { az: 0.2, e0: 0.95, droop: 1.35, L: 3.4, age: 0 },
-  { az: 1.1, e0: 0.45, droop: 1.75, L: 4.0, age: 0.5 },
-  { az: 2.05, e0: 0.15, droop: 1.95, L: 4.2, age: 0.7 },
-  { az: 2.95, e0: 0.72, droop: 1.5, L: 3.8, age: 0.3 },
-  { az: 3.85, e0: 0.28, droop: 1.9, L: 4.1, age: 0.6 },
-  { az: 4.75, e0: 0.58, droop: 1.6, L: 3.9, age: 0.4 },
-  { az: 5.55, e0: -0.08, droop: 2.0, L: 4.0, age: 1 },
+  { az: 0.95, e0: 0.4, droop: 1.75, L: 4.0, age: 0.5 },
+  { az: 1.75, e0: 0.15, droop: 1.95, L: 4.2, age: 0.7 },
+  { az: 2.55, e0: 0.75, droop: 1.5, L: 3.8, age: 0.3 },
+  { az: 3.35, e0: 0.28, droop: 1.9, L: 4.1, age: 0.6 },
+  { az: 4.1, e0: 1.1, droop: 1.2, L: 3.0, age: 0 },
+  { az: 4.85, e0: 0.55, droop: 1.6, L: 3.9, age: 0.4 },
+  { az: 5.6, e0: -0.08, droop: 2.0, L: 4.0, age: 1 },
 ];
+// uv of the painted frond (Q0): full quadrant width, base at canvas y 506, tip at y 12.
+const UV_FROND = [0, 512 / AT, 1 - 506 / AT, 1 - 12 / AT];
 
-function frondColors(age) {
-  const blade = age >= 1 ? P.frondOld : mixC(P.frondYoung, P.frond, smoothstep(0, 0.5, age));
-  return (s, part, n) => {
-    const t = s / (n - 1);
-    if (part === 1) return mixC(P.rachis, blade, 0.25 + 0.5 * t);
-    // leaflets: alternate rows a touch darker so the pinnate rhythm reads
-    const c = mixC(blade, P.frondTip, smoothstep(0.5, 1, t) * 0.6);
-    return s % 2 ? mulC(c, 0.88) : c;
-  };
-}
-
-function addFrond(B, base, f, opt) {
-  const segs = opt.segs;
+function addFrond(B, base, f, segs, W, fold) {
   const ts = [];
+  const w = [];
   for (let s = 0; s <= segs; s++) ts.push(s / segs);
-  const wl = [];
-  const wr = [];
-  for (let s = 0; s < segs; s++) {
-    const t = ts[s];
-    const w = s === 0 ? opt.W * 0.12 : opt.W * Math.pow(Math.sin(Math.PI * Math.min(0.97, 0.12 + t * 0.95)), 0.6);
-    // feathered silhouette: leaflet groups alternate long / short
-    wl.push(w * (s % 2 ? 0.8 : 1));
-    wr.push(w * (s % 2 ? 1 : 0.82));
-  }
-  const col = frondColors(f.age);
+  for (let s = 0; s < segs; s++) w.push(W * (0.6 + 0.4 * Math.sin(Math.PI * Math.min(0.95, 0.25 + ts[s] * 0.8))));
+  const blade = f.age >= 1 ? P.frondOld : mixC(P.frondYoung, P.frond, smoothstep(0, 0.5, f.age));
   leafStrip(B, {
     base,
     az: f.az,
     e0: f.e0,
     droop: f.droop,
-    L: f.L * opt.lenK,
+    L: f.L,
     ts,
-    wl,
-    wr,
-    fold: opt.fold,
-    color: (s, part) => col(s, part, segs + 1),
-    tipColor: mulC(P.frondTip, f.age >= 1 ? 1.25 : 1),
+    w,
+    fold,
+    twist: 0.35,
+    uv: UV_FROND,
+    // vertex colour tints the painted texture: pale near the crown, darker toward the hanging tips
+    color: (t) => mulC(mixC(mixC(hex('#fff6dc'), hex('#ffffff'), t), blade, 0.12), 1.12 - 0.22 * t),
   });
 }
 
-function palmFrondGeometry() {
+function palmFrondGeometry(hi) {
   const B = new Builder();
   const base = add(PALM_TOP, [0, 0.12, 0]);
-  for (const f of PALM_FRONDS) addFrond(B, base, f, { segs: 5, W: 0.56, fold: 0.62, lenK: 1 });
+  const list = hi ? PALM_FRONDS : PALM_FRONDS.filter((_, i) => i !== 5);
+  for (const f of list) addFrond(B, base, f, hi ? 5 : 4, 0.78, 0.5);
   const g = B.geometry();
-  // soft painted crown: blend normals toward a sphere around the crown
-  spherifyNormals(g, new THREE.Vector3(base[0], base[1] - 0.6, base[2]), 0.35);
+  spherifyNormals(g, new THREE.Vector3(base[0], base[1] - 0.6, base[2]), 0.45);
   g.computeBoundingSphere();
   return g;
 }
 
-// Low palm: short stump with a fountain of fronds from near the ground.
+// Low palm: stubby bole and a fountain of short feathery fronds (same painted frond, fuller tint).
 const LOW_FRONDS = [
   { az: 0.3, e0: 1.3, droop: 1.6, L: 2.0, age: 0 },
   { az: 1.35, e0: 1.05, droop: 1.9, L: 2.4, age: 0.4 },
@@ -376,48 +695,34 @@ const LOW_FRONDS = [
   { az: 4.4, e0: 1.25, droop: 1.75, L: 2.1, age: 0.1 },
   { az: 5.4, e0: 0.85, droop: 2.1, L: 2.4, age: 1 },
 ];
-function lowPalmGeometry() {
+function lowPalmGeometry(hi) {
   const B = new Builder();
-  tube(
-    B,
-    [[0, -0.2, 0], [0, 0.42, 0]],
-    [0.22, 0.15],
-    5,
-    (i) => (i ? P.trunkTop : P.trunkBase),
-    { apex: 0.12, apexColor: P.trunkTop }
-  );
+  tube(B, [[0, -0.2, 0], [0, 0.42, 0]], [0.22, 0.15], 6, (t) => mixC(P.trunkBase, P.trunkTop, t), [UV_RACHIS[0], UV_RACHIS[0], UV_RACHIS[1], UV_RACHIS[1]], hi ? 0.1 : 0);
   const base = [0, 0.45, 0];
-  for (const f of LOW_FRONDS) addFrond(B, base, f, { segs: 4, W: 0.4, fold: 0.55, lenK: 1 });
+  for (const f of LOW_FRONDS) addFrond(B, base, f, hi ? 4 : 3, 0.5, 0.45);
   const g = B.geometry();
-  spherifyNormals(g, new THREE.Vector3(0, 0.3, 0), 0.4);
+  spherifyNormals(g, new THREE.Vector3(0, 0.3, 0), 0.45);
   g.computeBoundingSphere();
   return g;
 }
 
 // ---------------------------------------------------------------------------------------------
-// Banana: pseudostem of wrapped sheaths, 6 paddle leaves + a rolled young leaf; optional bunch.
+// Banana: smooth pseudostem (sheath stripes in vertex colour), 6 big painted paddle leaves
+// (pale midrib, parallel veins, torn slits in the alpha) + a rolled young leaf; optional bunch.
 // ---------------------------------------------------------------------------------------------
 const BAN_TOP = 2.45;
-function bananaStemGeometry() {
+function bananaStemGeometry(hi) {
   const B = new Builder();
-  const ys = [-0.15, 0.8, 1.7, BAN_TOP];
-  const rs = [0.2, 0.16, 0.14, 0.125];
-  tube(
-    B,
-    ys.map((y) => [0, y, 0]),
-    rs,
-    6,
-    (i, k) => {
-      const t = i / 3;
-      let c = mixC(P.stemDark, P.stem, smoothstep(0, 0.7, t));
-      // dry brown outer sheaths peel near the base; pale streaks where sheaths overlap
-      const n = valueNoise(k * 1.7 + 3, i * 1.9, 83);
-      c = mixC(c, P.sheathDry, smoothstep(0.45, 0.8, n) * (1 - t) * 0.9);
-      return k % 3 === 0 ? mulC(c, 1.12) : c;
-    },
-    { apex: 0.12, apexColor: P.stem }
-  );
-  return B.geometry();
+  const ys = [-0.15, 0.6, 1.2, 1.8, BAN_TOP];
+  const rs = [0.21, 0.17, 0.15, 0.14, 0.125];
+  tube(B, ys.map((y) => [0, y, 0]), rs, hi ? 7 : 6, (t, a) => {
+    let c = mixC(P.stemDark, P.stem, smoothstep(0, 0.7, t));
+    const n = valueNoise(a * 7 + 3, t * 5, 83);
+    c = mixC(c, P.sheathDry, smoothstep(0.45, 0.8, n) * (1 - t) * 0.9);
+    // overlapping sheath edges: soft pale streaks around the stem
+    return mulC(c, 1 + 0.12 * Math.max(0, Math.sin(a * TAU * 3 + t * 2)));
+  }, null, 0.12);
+  return B.geometry(false);
 }
 
 const BAN_LEAVES = [
@@ -428,26 +733,15 @@ const BAN_LEAVES = [
   { az: 4.6, e0: 0.5, droop: 1.95, L: 2.3, age: 0.8 },
   { az: 5.6, e0: 0.35, droop: 2.35, L: 2.1, age: 1 },
 ];
-const BAN_TS = [0, 0.16, 0.3, 0.46, 0.62, 0.78, 0.92, 1];
-const BAN_W = [0.04, 0.06, 0.85, 1, 1, 0.95, 0.68];
-
-function bananaLeafGeometry() {
+const UV_BANANA = [512 / AT, 1, 1 - 508 / AT, 1 - 8 / AT];
+function bananaLeafGeometry(hi) {
   const B = new Builder();
-  const rand = mulberry32(8301);
+  const segs = 4;
+  const ts = [];
+  for (let s = 0; s <= segs; s++) ts.push(s / segs);
   for (const lf of BAN_LEAVES) {
-    const W = 0.33;
-    const wl = [];
-    const wr = [];
-    for (let s = 0; s < BAN_W.length; s++) {
-      const w = W * BAN_W[s];
-      // torn edges: alternate rows lose a strip on one side or the other
-      const tearL = s >= 3 && (s + (lf.age > 0.5 ? 1 : 0)) % 2 === 0 ? 0.62 + rand() * 0.2 : 1;
-      const tearR = s >= 3 && (s + (lf.age > 0.5 ? 0 : 1)) % 2 === 0 ? 0.62 + rand() * 0.2 : 1;
-      wl.push(w * (lf.age < 0.1 ? 1 : tearL));
-      wr.push(w * (lf.age < 0.1 ? 1 : tearR));
-    }
-    const blade = mixC(P.bladeYoung, P.blade, smoothstep(0, 0.4, lf.age));
-    const bl = lf.age >= 0.8 ? mixC(P.blade, P.bladeOld, 0.7) : blade;
+    const W = 0.46;
+    const tintC = lf.age >= 0.8 ? hex('#f2e6b0') : mixC(hex('#fbffe8'), hex('#ffffff'), lf.age);
     const base = [Math.cos(lf.az) * 0.08, BAN_TOP + 0.05 + (1 - lf.age) * 0.1, Math.sin(lf.az) * 0.08];
     leafStrip(B, {
       base,
@@ -455,21 +749,15 @@ function bananaLeafGeometry() {
       e0: lf.e0,
       droop: lf.droop,
       L: lf.L,
-      ts: BAN_TS,
-      wl,
-      wr,
-      fold: 0.28,
-      color: (s, part) => {
-        if (s < 2) return P.stem;
-        if (part === 1) return P.midrib;
-        let c = s % 2 ? mixC(bl, P.bladeEdge, 0.5) : bl;
-        if (lf.age >= 0.8) c = mixC(c, P.bladeDry, smoothstep(4, 6, s) * 0.85);
-        return c;
-      },
-      tipColor: lf.age >= 0.8 ? P.bladeDry : P.bladeEdge,
+      ts,
+      w: ts.slice(0, -1).map(() => W),
+      fold: 0.22,
+      twist: 0.25 * (lf.age - 0.5),
+      uv: UV_BANANA,
+      color: (t) => mulC(tintC, 1.08 - 0.16 * t),
     });
   }
-  // rolled young "cigar" leaf standing straight up from the centre
+  // rolled young "cigar" leaf standing up from the centre (narrow slice of the painted midrib)
   leafStrip(B, {
     base: [0, BAN_TOP + 0.1, 0],
     az: 0.9,
@@ -477,30 +765,22 @@ function bananaLeafGeometry() {
     droop: 0.15,
     L: 1.0,
     ts: [0, 0.6, 1],
-    wl: [0.05, 0.06],
-    wr: [0.05, 0.06],
+    w: [0.06, 0.06],
     fold: 0.9,
-    color: () => P.bladeYoung,
-    tipColor: P.bladeYoung,
+    uv: [600 / AT, 700 / AT, 1 - 480 / AT, 1 - 60 / AT],
+    color: () => hex('#f4ffe0'),
   });
   return B.geometry();
 }
 
-function bananaBunchGeometry() {
+function bananaBunchGeometry(hi) {
   const B = new Builder();
-  // curved stalk out of the crown and down
-  tube(B, [[0.05, BAN_TOP + 0.05, 0], [0.5, BAN_TOP - 0.1, 0], [0.72, 1.9, 0]], [0.04, 0.04, 0.035], 4, () => P.stemDark);
-  // bunch of hands: ribbed, fat in the middle, green-yellow
-  tube(
-    B,
-    [[0.73, 1.95, 0], [0.75, 1.6, 0], [0.75, 1.25, 0], [0.73, 1.0, 0]],
-    [0.1, 0.21, 0.19, 0.11],
-    6,
-    (i, k) => (k % 2 ? P.fruit : mixC(P.fruit, P.fruitRipe, 0.4 + i * 0.15)),
-    { rib: 0.14, apex: 0.08, apexColor: P.stemDark }
-  );
-  const g = B.geometry();
-  const bud = paint(new THREE.OctahedronGeometry(0.1, 0), '#ffffff');
+  tube(B, [[0.05, BAN_TOP + 0.05, 0], [0.5, BAN_TOP - 0.1, 0], [0.72, 1.9, 0]], [0.04, 0.04, 0.035], 5, () => P.stemDark, null, 0);
+  // bunch: smooth fat column of ribbed hands, green-yellow
+  tube(B, [[0.73, 1.95, 0], [0.75, 1.6, 0], [0.75, 1.25, 0], [0.73, 1.0, 0]], [0.12, 0.22, 0.2, 0.12], hi ? 8 : 6,
+    (t, a) => mixC(P.fruit, P.fruitRipe, 0.3 + 0.4 * t).map((x) => x * (0.82 + 0.18 * Math.abs(Math.cos(a * TAU * 4)))), null, 0.1);
+  const g = B.geometry(false);
+  const bud = paint(new THREE.IcosahedronGeometry(0.1, 0), '#ffffff');
   spherifyNormals(bud, new THREE.Vector3(), 1);
   bud.scale(1, 1.7, 1);
   bud.translate(0.72, 0.72, 0);
@@ -510,116 +790,79 @@ function bananaBunchGeometry() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Monstera clump: 4 heart-shaped split leaves on long petioles.
-// Leaf in local space: forward +x from the petiole junction, cardioid margin, 4 lobes per side with
-// slits between them that narrow toward the midrib.
+// Monstera clump: 4 glossy heart leaves (painted fenestrations + splits in the alpha) on petioles.
+// Leaf card in local space: forward +x from the petiole junction, across z, gently cupped.
+// The painted leaf (Q2) has its junction at canvas (256, 952), tip at y 552, half-width ~0.41 L.
 // ---------------------------------------------------------------------------------------------
 const MON_LEAVES = [
-  { az: 0.2, ph: 0.62, hr: 0.32, L: 0.8, pitch: 0.55, young: 0 },
-  { az: 1.75, ph: 0.88, hr: 0.36, L: 0.95, pitch: 0.42, young: 0 },
-  { az: 3.3, ph: 0.5, hr: 0.42, L: 0.75, pitch: 0.7, young: 1 },
-  { az: 4.75, ph: 0.98, hr: 0.24, L: 0.9, pitch: 0.36, young: 0 },
+  { az: 0.2, ph: 0.62, hr: 0.32, L: 0.95, pitch: 0.55, young: 0 },
+  { az: 1.75, ph: 0.88, hr: 0.36, L: 1.1, pitch: 0.42, young: 0 },
+  { az: 3.3, ph: 0.5, hr: 0.42, L: 0.85, pitch: 0.7, young: 1 },
+  { az: 4.75, ph: 0.98, hr: 0.24, L: 1.05, pitch: 0.36, young: 0 },
 ];
-function monsteraLeaf(L, young) {
-  const B = new Builder();
-  const K = 4;
-  const thMax = 0.86 * Math.PI;
-  const gap = 0.07;
-  const leaf = young ? P.mLeafYoung : P.mLeaf;
-  const vein = young ? mixC(P.mVein, P.mLeafYoung, 0.4) : P.mVein;
-  const r = (th) => L * (0.5 * Math.pow(1 + Math.cos(th), 0.9) + 0.03);
-  const bend = (u, z) => -0.2 * (z * z) / L - 0.16 * Math.pow(Math.max(0, u - 0.35 * L), 2) / L;
-  const margin = (th, sd) => {
-    const rr = r(th);
-    const u = rr * Math.cos(th);
-    const z = sd * rr * Math.sin(th) * 0.95;
-    return [u, bend(u, z), z];
-  };
-  const inner = (th) => {
-    const u = Math.max(0.04 * L, 0.9 * r(th) * Math.cos(th));
-    return [u, 0.012 * L, 0];
-  };
-  for (const sd of [-1, 1]) {
-    for (let k = 0; k < K; k++) {
-      const a = (k / K) * thMax + (k > 0 ? gap * 0.5 : 0);
-      const b = ((k + 1) / K) * thMax - gap * 0.5;
-      const ia = B.v(inner(a), vein);
-      const ib = B.v(inner(b), vein);
-      const oa = B.v(margin(a, sd), k % 2 ? leaf : mixC(leaf, P.mEdge, 0.5));
-      const ob = B.v(margin(b, sd), k % 2 ? mixC(leaf, P.mEdge, 0.5) : leaf);
-      B.tri(ia, oa, ib);
-      B.tri(ib, oa, ob);
+function monsteraLeaf(B, L, young, mtx) {
+  const fs = [-0.17, 0.35, 1.0];
+  const zs = [-0.43, 0, 0.43];
+  const tintC = young ? hex('#f0ffd8') : hex('#ffffff');
+  const v3 = new THREE.Vector3();
+  let prev = null;
+  for (const f of fs) {
+    const row = [];
+    for (const zf of zs) {
+      const u = f * L;
+      const z = zf * L;
+      const y = -0.22 * (z * z) / L - 0.2 * Math.pow(Math.max(0, u - 0.3 * L), 2) / L + (zf === 0 ? 0.015 * L : 0);
+      v3.set(u, y, z).applyMatrix4(mtx);
+      row.push(B.v([v3.x, v3.y, v3.z], tintC, [(256 + zf * 400) / AT, 1 - (952 - f * 400) / AT]));
     }
+    if (prev) connectRows(B, prev, row);
+    prev = row;
   }
-  return B.geometry();
 }
 function monsteraGeometry() {
-  const parts = [];
-  const pet = new Builder();
+  const B = new Builder();
   const m = new THREE.Matrix4();
   const ry = new THREE.Matrix4();
   const rz = new THREE.Matrix4();
   for (const lf of MON_LEAVES) {
     const J = [Math.cos(lf.az) * lf.hr, lf.ph, Math.sin(lf.az) * lf.hr];
-    // petiole: thin V-strip from the ground to the junction, with a slight outward arc
     const b0 = [Math.cos(lf.az) * 0.04, -0.05, Math.sin(lf.az) * 0.04];
-    const side = [-Math.sin(lf.az) * 0.024, 0, Math.cos(lf.az) * 0.024];
-    const r0 = [pet.v(sub(b0, side), P.mPetiole), pet.v(add(b0, [0, 0.02, 0]), P.mPetiole), pet.v(add(b0, side), P.mPetiole)];
-    const r1 = [
-      pet.v(sub(J, scl(side, 0.6)), P.mPetiole),
-      pet.v(add(J, [0, 0.015, 0]), mixC(P.mPetiole, P.mVein, 0.5)),
-      pet.v(add(J, scl(side, 0.6)), P.mPetiole),
-    ];
-    connectRows(pet, r0, r1);
-    const g = monsteraLeaf(lf.L, lf.young);
+    const side = [-Math.sin(lf.az) * 0.026, 0, Math.cos(lf.az) * 0.026];
+    const pc = mulC(P.mPetiole, 2.2);
+    const r0 = [B.v(sub(b0, side), pc, UV_PETIOLE), B.v(add(b0, [0, 0.02, 0]), pc, UV_PETIOLE), B.v(add(b0, side), pc, UV_PETIOLE)];
+    const r1 = [B.v(sub(J, scl(side, 0.6)), pc, UV_PETIOLE), B.v(add(J, [0, 0.015, 0]), pc, UV_PETIOLE), B.v(add(J, scl(side, 0.6)), pc, UV_PETIOLE)];
+    connectRows(B, r0, r1);
     rz.makeRotationZ(-lf.pitch);
     ry.makeRotationY(-lf.az);
     m.makeTranslation(J[0], J[1], J[2]).multiply(ry).multiply(rz);
-    g.applyMatrix4(m);
-    parts.push(g);
+    monsteraLeaf(B, lf.L, lf.young, m);
   }
-  parts.push(pet.geometry());
-  const g = merge(parts);
-  spherifyNormals(g, new THREE.Vector3(0, 0.2, 0), 0.25);
+  const g = B.geometry();
+  spherifyNormals(g, new THREE.Vector3(0, 0.2, 0), 0.3);
   return g;
 }
 
 // ---------------------------------------------------------------------------------------------
-// Cacti: saguaro (two variants: 1 arm, 3 arms), barrel, prickly pear.
+// Cacti: smooth round bodies, ribs + spine areoles painted (Q3), flowers as painted beads.
 // ---------------------------------------------------------------------------------------------
-function cactusColor(i, k, n, crest, groove) {
-  const t = i / Math.max(1, n - 1);
-  let c = k % 2 ? groove : crest;
-  c = mixC(mixC(P.cBase, c, 0.35 + 0.65 * smoothstep(0, 0.3, t)), P.cTop, smoothstep(0.75, 1, t) * 0.5);
-  return c;
+const cactusTint = (t) => mixC(hex('#d8e0d0'), hex('#fffbe8'), smoothstep(0, 0.4, t));
+function flowerBeads(list, uvr, r) {
+  return list.map((c) => bead(r, 3, hex('#ffffff'), c, [1, 0.55, 1], uvr));
 }
-function saguaroGeometry(arms) {
+function saguaroGeometry(arms, hi) {
   const B = new Builder();
+  const S = hi ? 8 : 6;
   const ys = [-0.15, 1.2, 2.6, 3.9, 4.6];
-  const rs = [0.36, 0.34, 0.33, 0.31, 0.25];
-  tube(B, ys.map((y) => [0, y, 0]), rs, 10, (i, k, n) => cactusColor(i, k, n, P.cCrest, P.cGroove), {
-    rib: 0.14,
-    apex: 0.28,
-    apexColor: P.cTop,
-  });
-  const flowers = [tetraPiece(0.09, '#ffffff', [0.05, 4.85, 0.04]), tetraPiece(0.08, '#ffffff', [-0.08, 4.8, -0.06])];
+  tube(B, ys.map((y) => [0, y, 0]), [0.36, 0.34, 0.33, 0.31, 0.27], S, cactusTint, UV_RIBS, 0.3);
+  const fl = [[0.06, 4.86, 0.05], [-0.09, 4.82, -0.07]];
   for (const a of arms) {
     const d = [Math.cos(a.az), 0, Math.sin(a.az)];
     const pt = (out, y) => [d[0] * out, a.y + y, d[2] * out];
     const pts = [pt(0.12, 0), pt(0.52, 0.06), pt(0.68 * a.reach, 0.5), pt(0.7 * a.reach, a.up)];
-    tube(B, pts, [0.19, 0.19, 0.18, 0.16], 6, (i, k, n) => cactusColor(i + 1, k, n + 1, P.cCrest, P.cGroove), {
-      rib: 0.1,
-      apex: 0.18,
-      apexColor: P.cTop,
-    });
-    if (a.flower) flowers.push(tetraPiece(0.07, '#ffffff', add(pts[3], [0, 0.22, 0])));
+    tube(B, pts, [0.19, 0.19, 0.18, 0.16], S, (t) => cactusTint(0.4 + t * 0.6), [UV_RIBS[0], UV_RIBS[0] + (UV_RIBS[1] - UV_RIBS[0]) * 0.6, 0.1, 0.35], 0.18);
+    if (a.flower) fl.push(add(pts[3], [0, 0.17, 0]));
   }
-  const g = B.geometry();
-  for (const f of flowers) {
-    const cl = f.attributes.color;
-    for (let i = 0; i < cl.count; i++) cl.setXYZ(i, P.saguaroFlower[0], P.saguaroFlower[1], P.saguaroFlower[2]);
-  }
-  return merge([g, ...flowers]);
+  return merge([B.geometry(), ...flowerBeads(fl, UV_CREAM, 0.09)]);
 }
 const SAGUARO_A = [{ az: 0.3, y: 1.9, reach: 1, up: 1.5, flower: true }];
 const SAGUARO_B = [
@@ -628,36 +871,19 @@ const SAGUARO_B = [
   { az: 1.9, y: 3.0, reach: 0.8, up: 0.9, flower: true },
 ];
 
-function barrelGeometry() {
+function barrelGeometry(hi) {
   const B = new Builder();
-  const prof = [[-0.08, 0.36], [0.25, 0.42], [0.56, 0.38], [0.8, 0.24]];
-  tube(
-    B,
-    prof.map((p) => [0, p[0], 0]),
-    prof.map((p) => p[1]),
-    10,
-    (i, k, n) => {
-      let c = k % 2 ? P.barrelGroove : P.barrelCrest;
-      // spiny crown: warm ochre spines show around the top
-      c = mixC(c, P.barrelSpine, i === n - 1 && k % 2 === 0 ? 0.55 : 0);
-      return mixC(P.cBase, c, 0.4 + 0.6 * (i / (n - 1)));
-    },
-    { rib: 0.16, apex: 0.08, apexColor: P.barrelSpine }
-  );
-  const g = B.geometry();
+  const prof = [[-0.08, 0.36], [0.25, 0.43], [0.56, 0.39], [0.8, 0.26]];
+  tube(B, prof.map((p) => [0, p[0], 0]), prof.map((p) => p[1]), hi ? 8 : 6, (t) => mixC(cactusTint(t), hex('#fff0c8'), smoothstep(0.7, 1, t) * 0.4), [UV_RIBS[0], UV_RIBS[1], 0.3, 0.45], 0.14);
   const fl = [];
-  for (let j = 0; j < 4; j++) {
-    const a = (j / 4) * TAU + 0.4;
-    fl.push(tetraPiece(0.075, '#ffffff', [Math.cos(a) * 0.15, 0.86, Math.sin(a) * 0.15]));
+  const nf = hi ? 4 : 2;
+  for (let j = 0; j < nf; j++) {
+    const a = (j / nf) * TAU + 0.4;
+    fl.push([Math.cos(a) * 0.14, 0.9, Math.sin(a) * 0.14]);
   }
-  for (const f of fl) {
-    const cl = f.attributes.color;
-    for (let i = 0; i < cl.count; i++) cl.setXYZ(i, P.yellowFlower[0], P.yellowFlower[1], P.yellowFlower[2]);
-  }
-  return merge([g, ...fl]);
+  return merge([B.geometry(), ...flowerBeads(fl, UV_YELLOW, 0.08)]);
 }
 
-// pads: [x, y, z, yaw, roll, size]
 const PEAR_PADS = [
   [0, 0.36, 0, 0, 0.05, 1],
   [0.28, 0.32, 0.12, 0.8, 0.45, 0.9],
@@ -665,19 +891,19 @@ const PEAR_PADS = [
   [0.52, 0.86, 0.2, 0.9, 0.55, 0.75],
   [-0.28, 0.82, -0.06, -0.3, -0.7, 0.75],
 ];
-function pearGeometry() {
+function pearGeometry(hi) {
   const parts = [];
   const m = new THREE.Matrix4();
   const e = new THREE.Euler();
   const q = new THREE.Quaternion();
-  for (const [x, y, z, yaw, roll, s] of PEAR_PADS) {
-    const g = paint(new THREE.IcosahedronGeometry(1, 0), '#ffffff');
-    spherifyNormals(g, new THREE.Vector3(), 0.85);
+  const pads = hi ? PEAR_PADS : PEAR_PADS.slice(0, 4);
+  for (const [x, y, z, yaw, roll, s] of pads) {
+    const g = bead(1, 4, hex('#ffffff'), [0, 0, 0], [1, 1, 1], UV_PAD);
+    spherifyNormals(g, new THREE.Vector3(), 0.5);
     const p = g.attributes.position;
     const cl = g.attributes.color;
     for (let i = 0; i < p.count; i++) {
-      // lighter rim on top of the pad, darker toward the joint
-      const c = mixC(P.padDark, mixC(P.pad, P.padLight, smoothstep(0.3, 1, p.getY(i))), smoothstep(-1, 0.1, p.getY(i)));
+      const c = mixC(hex('#b8c4c0'), hex('#fff8e0'), smoothstep(-1, 0.6, p.getY(i)));
       cl.setXYZ(i, c[0], c[1], c[2]);
     }
     e.set(0, yaw, roll);
@@ -686,18 +912,9 @@ function pearGeometry() {
     g.applyMatrix4(m);
     parts.push(g);
   }
-  const tunas = [
-    [[0.0, 1.33, 0.02], P.tuna],
-    [[0.16, 1.28, 0.02], P.tuna],
-    [[0.66, 1.12, 0.26], P.tuna],
-    [[-0.44, 1.07, -0.08], P.yellowFlower],
-  ];
-  for (const [c, col] of tunas) {
-    const g = tetraPiece(0.065, '#ffffff', c);
-    const cl = g.attributes.color;
-    for (let i = 0; i < cl.count; i++) cl.setXYZ(i, col[0], col[1], col[2]);
-    parts.push(g);
-  }
+  const tunas = [[0.0, 1.33, 0.02], [0.16, 1.28, 0.02], [0.66, 1.12, 0.26]];
+  for (const c of tunas) parts.push(bead(0.06, 3, hex('#e0a0b8'), c, [1, 1.25, 1], UV_PINK));
+  parts.push(bead(0.075, 3, hex('#ffffff'), [-0.44, 1.07, -0.08], [1, 0.55, 1], UV_YELLOW));
   return merge(parts);
 }
 
@@ -910,18 +1127,22 @@ function tint(it) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Build everything.
+// Build everything. 3 opaque parts on cozyMaterial (trunks, stems, bunches) and 8 parts on the shared
+// leafMaterial program with one painted 1024 atlas (fronds, banana, monstera, cacti).
 // ---------------------------------------------------------------------------------------------
-export function buildTropical(Q) {
+export function buildTropical(Q, tier) {
+  const hi = tier !== 'low';
+  const atlas = paintTexture('tropical-atlas', drawTropicalAtlas, { size: 1024, seed: 7 });
   const DS = THREE.DoubleSide;
+  const leaf = (o) => leafMaterial({ map: atlas, side: DS, cut: 0.5, ...o });
   const mats = {
     palmTrunk: cozyMaterial({ sway: 0.012, wrap: 0.45, rim: 0.12, aoScale: 0.09 }),
-    palmFrond: cozyMaterial({ sway: 0.012, wrap: 0.8, rim: 0.4, aoScale: 0.09, side: DS }),
-    lowPalm: cozyMaterial({ sway: 0.05, wrap: 0.8, rim: 0.35, aoScale: 0.35, side: DS }),
     bananaStem: cozyMaterial({ sway: 0.025, wrap: 0.55, rim: 0.2, aoScale: 0.2 }),
-    bananaLeaf: cozyMaterial({ sway: 0.025, wrap: 0.8, rim: 0.4, aoScale: 0.2, side: DS }),
-    monstera: cozyMaterial({ sway: 0.06, wrap: 0.75, rim: 0.3, aoScale: 0.45, side: DS }),
-    cactus: cozyMaterial({ sway: 0, wrap: 0.5, rim: 0.2, aoScale: 0.25 }),
+    palmFrond: leaf({ sway: 0.012, wrap: 0.8, rim: 0.35, trans: 0.45, aoScale: 0.09 }),
+    lowPalm: leaf({ sway: 0.05, wrap: 0.8, rim: 0.3, trans: 0.4, aoScale: 0.35 }),
+    bananaLeaf: leaf({ sway: 0.025, wrap: 0.75, rim: 0.3, trans: 0.5, aoScale: 0.2 }),
+    monstera: leaf({ sway: 0.06, wrap: 0.65, rim: 0.35, trans: 0.3, aoScale: 0.45 }),
+    cactus: leaf({ sway: 0, wrap: 0.5, rim: 0.2, trans: 0, aoScale: 0.25 }),
   };
   const palms = placePalms(Q.palms | 0);
   const lowPalms = placeLowPalms(Q.lowPalms | 0);
@@ -930,17 +1151,17 @@ export function buildTropical(Q) {
   const cac = placeCacti(Q.cactus | 0);
 
   const parts = [
-    { name: 'palmTrunk', geo: palmTrunkGeometry(), mat: mats.palmTrunk, items: palms },
-    { name: 'palmFronds', geo: palmFrondGeometry(), mat: mats.palmFrond, items: palms },
-    { name: 'lowPalm', geo: lowPalmGeometry(), mat: mats.lowPalm, items: lowPalms },
-    { name: 'bananaStem', geo: bananaStemGeometry(), mat: mats.bananaStem, items: ban.plants },
-    { name: 'bananaLeaves', geo: bananaLeafGeometry(), mat: mats.bananaLeaf, items: ban.plants },
-    { name: 'bananaBunch', geo: bananaBunchGeometry(), mat: mats.bananaStem, items: ban.bunches },
+    { name: 'palmTrunk', geo: palmTrunkGeometry(hi), mat: mats.palmTrunk, items: palms },
+    { name: 'palmFronds', geo: palmFrondGeometry(hi), mat: mats.palmFrond, items: palms },
+    { name: 'lowPalm', geo: lowPalmGeometry(hi), mat: mats.lowPalm, items: lowPalms },
+    { name: 'bananaStem', geo: bananaStemGeometry(hi), mat: mats.bananaStem, items: ban.plants },
+    { name: 'bananaLeaves', geo: bananaLeafGeometry(hi), mat: mats.bananaLeaf, items: ban.plants },
+    { name: 'bananaBunch', geo: bananaBunchGeometry(hi), mat: mats.bananaStem, items: ban.bunches },
     { name: 'monstera', geo: monsteraGeometry(), mat: mats.monstera, items: mon },
-    { name: 'saguaroA', geo: saguaroGeometry(SAGUARO_A), mat: mats.cactus, items: cac.sagA },
-    { name: 'saguaroB', geo: saguaroGeometry(SAGUARO_B), mat: mats.cactus, items: cac.sagB },
-    { name: 'barrel', geo: barrelGeometry(), mat: mats.cactus, items: cac.barrel },
-    { name: 'pear', geo: pearGeometry(), mat: mats.cactus, items: cac.pear },
+    { name: 'saguaroA', geo: saguaroGeometry(SAGUARO_A, hi), mat: mats.cactus, items: cac.sagA },
+    { name: 'saguaroB', geo: saguaroGeometry(SAGUARO_B, hi), mat: mats.cactus, items: cac.sagB },
+    { name: 'barrel', geo: barrelGeometry(hi), mat: mats.cactus, items: cac.barrel },
+    { name: 'pear', geo: pearGeometry(hi), mat: mats.cactus, items: cac.pear },
   ];
   let draws = 0;
   let tris = 0;
@@ -958,13 +1179,14 @@ export function buildTropical(Q) {
 }
 
 export default function Tropical({ Q, tier }) {
-  const built = useMemo(() => buildTropical(Q), [Q.palms, Q.lowPalms, Q.banana, Q.monstera, Q.cactus, tier]);
+  const built = useMemo(() => buildTropical(Q, tier), [Q.palms, Q.lowPalms, Q.banana, Q.monstera, Q.cactus, tier]);
 
   useEffect(() => {
     report('tropical', { draws: built.draws, triangles: built.tris, programs: 2 });
   }, [built]);
   useEffect(
     () => () => {
+      // the atlas is cached by paintTexture() and shared across rebuilds: keep it
       for (const p of built.parts) p.geo.dispose();
       for (const k of Object.keys(built.mats)) built.mats[k].dispose();
       for (const m of built.meshes) m.dispose();

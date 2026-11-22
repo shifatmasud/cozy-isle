@@ -3,14 +3,16 @@
 // bubble anemones, tube sponges, coral-crusted rock bommies with soft-coral fingers,
 // starfish / urchin / shell scatters on the sand, swaying turtle-grass meadows with sand halos
 // round each patch reef, and small schools of reef fish swimming slow loops.
-// 10 draw calls, every one a cozyMaterial InstancedMesh (no new shader programs).
+// 10 draw calls: painted-skin corals, fans, anemones, seagrass and fish through the shared leafMaterial program,
+// sand critters through cozyMaterial (no new shader programs). Hidden when the camera is > ~150 m away.
 // Note: island.js zeroes `tropical` wherever `under` is 1, so the reef uses its own sector mask
 // on BIOME_ANGLE.tropical plus the field's `d` (coast distance) to find the lagoon, crest and fore reef.
-import { createElement as h, useMemo, useEffect } from 'react';
+import { createElement as h, useMemo, useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { cozyMaterial, shared } from '../materials/shading.js';
-import { paint, merge, makeInstanced, spherifyNormals, report, triangles } from '../lib/geo.js';
+import { cozyMaterial, leafMaterial, shared } from '../materials/shading.js';
+import { paintTexture, brush } from '../materials/leafTex.js';
+import { paint, paintUV, merge, makeInstanced, spherifyNormals, report, triangles } from '../lib/geo.js';
 import { scatter, sampleField, clump, BIOME_ANGLE } from '../world/island.js';
 import { mulberry32, smoothstep, valueNoise, clamp, lerp } from '../world/noise.js';
 
@@ -82,7 +84,7 @@ export const SPECIES = {
   bommie: { share: 0.1, pref: { lagoon: 1, crest: 0.7, fore: 0.3 }, s: [1.0, 2.5], spread: 0.35, sink: 0.12, pal: 3 },
 };
 export const CRITTER_SHARE = 0.15; // starfish + urchin + shells scatters, also a fraction of Q.coral
-export const SEAGRASS_TUFTS = 0.3; // tufts of 3 ribbon blades per Q.seagrass
+export const SEAGRASS_TUFTS = 0.15; // painted cards of 7 ribbon blades (2 crossed bent cards) per Q.seagrass
 
 // Fish species for the schools: colour, body scale, typical group size.
 export const FISH_SPECIES = [
@@ -367,7 +369,242 @@ export function planReef(Q, tops) {
   return { counts, patches, meadows, items, schools };
 }
 
+
+// ---- painted reef textures (copied verbatim into Reef.js) ----
+function hsl(h, s, l, a = 1) {
+  return `hsla(${h},${s}%,${l}%,${a})`;
+}
+
+// Brain coral skin (repeat): meandering valleys in cool violet, warm sunlit ridges with rim highlights.
+function drawBrain(ctx, S, rand) {
+  ctx.fillStyle = hsl(40, 45, 80);
+  ctx.fillRect(0, 0, S, S);
+  for (let i = 0; i < 60; i++) brush.dab(ctx, rand() * S, rand() * S, S * (0.05 + rand() * 0.1), hsl(30 + rand() * 25, 50, 70 + rand() * 18), 0.35);
+  const walk = (x, y, a, n, col, w) => {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) {
+      let px = x, py = y, pa = a;
+      const r2 = mulberrySeed(n * 13 + Math.floor(x));
+      ctx.beginPath();
+      ctx.moveTo(px + ox, py + oy);
+      for (let k = 0; k < n; k++) {
+        pa += (r2() - 0.5) * 0.9;
+        px += Math.cos(pa) * S * 0.018;
+        py += Math.sin(pa) * S * 0.018;
+        ctx.lineTo(px + ox, py + oy);
+      }
+      ctx.stroke();
+    }
+  };
+  const seeds = [];
+  for (let i = 0; i < 40; i++) seeds.push([rand() * S, rand() * S, rand() * 6.28, 30 + Math.floor(rand() * 40)]);
+  for (const s of seeds) walk(s[0], s[1], s[2], s[3], hsl(265, 28, 58, 0.85), S * 0.022); // valleys
+  for (const s of seeds) walk(s[0], s[1], s[2], s[3], hsl(255, 32, 40, 0.9), S * 0.008); // groove core
+  ctx.save();
+  ctx.translate(-S * 0.012, -S * 0.012);
+  for (const s of seeds) walk(s[0], s[1], s[2], s[3], hsl(45, 90, 96, 0.7), S * 0.007); // lit ridge edge
+  ctx.restore();
+}
+
+// Tiny deterministic generator for redrawing the same path at wrap offsets.
+function mulberrySeed(a) {
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Coral skin (repeat) for staghorn, table, sponges, bommies: warm wash with polyp cups and cool flecks.
+function drawCoralSkin(ctx, S, rand) {
+  const g = ctx.createLinearGradient(0, 0, 0, S);
+  g.addColorStop(0, hsl(42, 60, 90));
+  g.addColorStop(1, hsl(30, 40, 78));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  for (let i = 0; i < 80; i++) brush.dab(ctx, rand() * S, rand() * S, S * (0.04 + rand() * 0.08), rand() < 0.35 ? hsl(255, 30, 70) : hsl(38, 70, 88), 0.3);
+  for (let i = 0; i < 420; i++) {
+    const x = rand() * S, y = rand() * S, r = S * (0.009 + rand() * 0.012);
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) {
+      brush.dab(ctx, x + ox, y + oy, r * 1.6, hsl(45, 85, 95), 0.7); // lit cup rim
+      brush.dab(ctx, x + ox + r * 0.3, y + oy + r * 0.3, r, hsl(262, 28, 50), 0.75); // shaded cup
+    }
+  }
+}
+
+// Purple sea fan lace (alpha): fan silhouette, thick radiating branches, fine cross lattice.
+function drawFan(ctx, S, rand) {
+  const cx = S / 2, by = S * 0.98;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, by);
+  ctx.bezierCurveTo(cx - S * 0.2, S * 0.8, cx - S * 0.56, S * 0.35, cx - S * 0.38, S * 0.1);
+  ctx.bezierCurveTo(cx - S * 0.2, -S * 0.02, cx + S * 0.2, -S * 0.02, cx + S * 0.38, S * 0.1);
+  ctx.bezierCurveTo(cx + S * 0.56, S * 0.35, cx + S * 0.2, S * 0.8, cx, by);
+  ctx.clip();
+  for (let i = 0; i < 40; i++) brush.dab(ctx, rand() * S, rand() * S, S * 0.08, hsl(290, 40, 60), 0.18);
+  // lattice: two families of gently curved lines
+  for (let fam = 0; fam < 2; fam++) {
+    for (let i = -20; i < 40; i++) {
+      const x0 = i * S * 0.035;
+      ctx.strokeStyle = hsl(285 + rand() * 20, 40, 55 + rand() * 20, 0.9);
+      ctx.lineWidth = S * (0.006 + rand() * 0.006);
+      ctx.beginPath();
+      for (let k = 0; k <= 12; k++) {
+        const y = S - (k / 12) * S;
+        const x = fam ? x0 + (S - y) * 0.55 + Math.sin(k * 0.9 + i * 2.1) * S * 0.012 : S - x0 - (S - y) * 0.55 + Math.sin(k * 1.3 + i * 1.7) * S * 0.012;
+        k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+  // main branches from the holdfast
+  const branch = (x, y, a, len, w, d) => {
+    const x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len;
+    ctx.strokeStyle = hsl(285, 45, 42);
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo((x + x2) / 2 + (rand() - 0.5) * len * 0.3, (y + y2) / 2, x2, y2);
+    ctx.stroke();
+    ctx.strokeStyle = hsl(40, 80, 92, 0.6);
+    ctx.lineWidth = w * 0.35;
+    ctx.stroke();
+    if (d > 0) {
+      branch(x2, y2, a - 0.25 - rand() * 0.25, len * 0.72, w * 0.7, d - 1);
+      branch(x2, y2, a + 0.25 + rand() * 0.25, len * 0.72, w * 0.7, d - 1);
+    }
+  };
+  branch(cx, by, -Math.PI / 2, S * 0.22, S * 0.032, 5);
+  // light from above, cool violet in the lower half
+  ctx.globalCompositeOperation = 'source-atop';
+  const g = ctx.createLinearGradient(0, 0, 0, S);
+  g.addColorStop(0, 'rgba(255,240,210,0.35)');
+  g.addColorStop(0.6, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(70,60,140,0.45)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// Turtle-grass card (alpha): 7 ribbon blades from the bottom centre, midrib, sunlit yellow tips, blue base.
+function drawSeagrass(ctx, S, rand) {
+  for (let i = 0; i < 7; i++) {
+    const x0 = S * (0.38 + rand() * 0.24);
+    const lean = (i / 6 - 0.5) * S * 0.7 + (rand() - 0.5) * S * 0.1;
+    const top = S * (0.02 + rand() * 0.2);
+    const w = S * (0.045 + rand() * 0.02);
+    const pts = [];
+    for (let k = 0; k <= 16; k++) {
+      const t = k / 16;
+      pts.push([x0 + lean * t * t + Math.sin(t * 3 + i) * S * 0.02, S - (S - top) * t]);
+    }
+    const hue = 75 + rand() * 25;
+    for (let k = 0; k < 16; k++) {
+      const t = k / 16;
+      const [x1, y1] = pts[k], [x2, y2] = pts[k + 1];
+      const ww = w * (1 - 0.3 * t) * (k === 15 ? 0.6 : 1);
+      ctx.strokeStyle = t < 0.2 ? hsl(185, 30, 28 + 40 * t) : hsl(hue - 30 + 25 * t, 38 + 20 * t, 30 + 40 * t);
+      ctx.lineWidth = ww;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    // midrib + lit edge
+    ctx.lineWidth = Math.max(1, w * 0.12);
+    ctx.strokeStyle = hsl(70, 70, 82, 0.6);
+    ctx.beginPath();
+    pts.forEach(([x, y], k) => (k ? ctx.lineTo(x - w * 0.25, y) : ctx.moveTo(x - w * 0.25, y)));
+    ctx.stroke();
+    ctx.strokeStyle = hsl(160, 40, 22, 0.5);
+    ctx.beginPath();
+    pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
+    // epiphyte specks near the tip
+    for (let k = 0; k < 4; k++) {
+      const p = pts[10 + Math.floor(rand() * 6)];
+      brush.dab(ctx, p[0] + (rand() - 0.5) * w * 0.6, p[1], w * 0.18, hsl(45, 60, 85), 0.7);
+    }
+  }
+}
+
+// Fish body, for a sphere stretched along x (nose = top of canvas, back = left/right edges,
+// belly = centre column, flanks at 1/4 and 3/4). Neutral values so the instance colour tints it.
+function drawFish(ctx, S, rand) {
+  const g = ctx.createLinearGradient(0, 0, S, 0);
+  g.addColorStop(0, hsl(240, 25, 45));
+  g.addColorStop(0.25, hsl(40, 40, 82));
+  g.addColorStop(0.5, hsl(45, 70, 97));
+  g.addColorStop(0.75, hsl(40, 40, 82));
+  g.addColorStop(1, hsl(240, 25, 45));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  // two dark bands and a pale band
+  for (const [y, w, c] of [[0.3, 0.07, hsl(250, 35, 30, 0.85)], [0.38, 0.05, hsl(45, 90, 97, 0.9)], [0.62, 0.06, hsl(250, 35, 30, 0.8)]]) {
+    ctx.fillStyle = c;
+    ctx.beginPath();
+    ctx.moveTo(0, S * y);
+    for (let x = 0; x <= S; x += S / 16) ctx.lineTo(x, S * (y + 0.015 * Math.sin(x * 0.05)));
+    ctx.lineTo(S, S * (y + w));
+    for (let x = S; x >= 0; x -= S / 16) ctx.lineTo(x, S * (y + w + 0.015 * Math.sin(x * 0.05 + 1)));
+    ctx.fill();
+  }
+  // scale dabs
+  for (let i = 0; i < 160; i++) brush.dab(ctx, rand() * S, S * (0.15 + rand() * 0.75), S * 0.015, hsl(45, 80, 96), 0.25);
+  // eyes on both flanks
+  for (const u of [0.25, 0.75]) {
+    brush.dab(ctx, S * u, S * 0.1, S * 0.05, hsl(45, 80, 97), 1);
+    brush.dab(ctx, S * u, S * 0.1, S * 0.03, hsl(250, 40, 12), 1);
+    brush.dab(ctx, S * u - S * 0.01, S * 0.09, S * 0.008, '#ffffff', 1);
+  }
+  // tail region (bottom strip): fin rays
+  ctx.fillStyle = hsl(40, 70, 88);
+  ctx.fillRect(0, S * 0.92, S, S * 0.08);
+  for (let x = 0; x < S; x += S / 24) brush.stroke(ctx, x, S, 0, S * 0.08, 2, hsl(30, 50, 60, 0.6), 0);
+}
+
+// Anemone dome (sphere uv): fat tentacles radiating down from the crown, glowing bulb tips.
+function drawAnemone(ctx, S, rand) {
+  ctx.fillStyle = hsl(330, 25, 45);
+  ctx.fillRect(0, 0, S, S);
+  const n = 26;
+  for (let row = 0; row < 3; row++) {
+    for (let i = 0; i < n; i++) {
+      const x = ((i + row * 0.5 + rand() * 0.3) / n) * S;
+      const y0 = S * (0.98 - row * 0.12);
+      const len = -S * (0.45 + rand() * 0.25);
+      const w = S / n * 0.8;
+      const gg = ctx.createLinearGradient(0, y0, 0, y0 + len);
+      gg.addColorStop(0, hsl(300, 25, 45));
+      gg.addColorStop(1, hsl(40, 65, 78));
+      ctx.strokeStyle = hsl(270, 30, 30, 0.7);
+      ctx.lineWidth = w * 1.15;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.quadraticCurveTo(x + (rand() - 0.5) * w * 2, y0 + len * 0.5, x + (rand() - 0.5) * w, y0 + len);
+      ctx.stroke();
+      ctx.strokeStyle = gg;
+      ctx.lineWidth = w * 0.85;
+      ctx.stroke();
+      brush.dab(ctx, x, y0 + len, w * 0.75, hsl(45, 90, 92), 1); // bulb tip
+      brush.dab(ctx, x - w * 0.2, y0 + len - w * 0.2, w * 0.3, '#ffffff', 0.9);
+    }
+  }
+}
+
 // ---------------------------------------------------------------- geometry (three.js) ----
+// Every coral part is built with paintUV so it can carry a painted skin through the shared leafMaterial program.
+// Shapes are smooth: vertex normals plus partial spherifyNormals, so the low segment counts never read as facets.
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const n3 = (x, y, z, seed) => valueNoise(x + y * 0.73, z - y * 0.61, seed);
@@ -382,7 +619,7 @@ function displace(g, fn) {
   return g;
 }
 
-// fn(x, y, z, r, g, b) -> [r, g, b]. Works on paint()ed geometry.
+// fn(x, y, z, r, g, b) -> [r, g, b]. Works on paint()/paintUV()ed geometry.
 function shade(g, fn) {
   const p = g.attributes.position;
   const c = g.attributes.color;
@@ -391,6 +628,13 @@ function shade(g, fn) {
     c.setXYZ(i, o[0], o[1], o[2]);
   }
   c.needsUpdate = true;
+  return g;
+}
+
+function scaleUV(g, su, sv, ou = 0, ov = 0) {
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su + ou, uv.getY(i) * sv + ov);
+  uv.needsUpdate = true;
   return g;
 }
 
@@ -406,56 +650,60 @@ function orientTo(g, from, dir) {
 
 const dirFrom = (az, tilt) => V3(Math.cos(az) * Math.sin(tilt), Math.cos(tilt), Math.sin(az) * Math.sin(tilt));
 
-// Staghorn (Acropora cervicornis): 4 antler limbs splaying from one base, each forking into 2 upturned
-// tapering fingers with pale growing tips. 4 x 8 + 8 x 8 = 96 triangles.
+// Value ramp: cool violet at the base, warm lit tops (multiplies the instance colour).
+function rampY(g, y0, y1, lo = 0.6, tipCol = null, tipFrom = 9, tipTo = 10, tipAmt = 0) {
+  const tip = tipCol ? new THREE.Color(tipCol) : null;
+  return shade(g, (x, y, z, r, gg, b) => {
+    const t = smoothstep(y0, y1, y);
+    const v = lo + (1 - lo) * t;
+    let c = [r * v * (1 - 0.06 * (1 - t)), gg * v, b * v * (1 + 0.12 * (1 - t))];
+    if (tip) c = mixC(c[0], c[1], c[2], tip, smoothstep(tipFrom, tipTo, y) * tipAmt);
+    return c;
+  });
+}
+
+// Staghorn (Acropora cervicornis): 3 antler limbs, each forking into 2 upturned, tapering fingers with pale
+// rounded growing tips. 9 smooth 6-sided tubes = 108 triangles; spherified so the thicket shades as one mass.
 function staghornGeo() {
   const rand = mulberry32(11);
   const parts = [];
-  for (let i = 0; i < 4; i++) {
-    const az = (i / 4) * TAU + rand() * 0.6;
+  for (let i = 0; i < 3; i++) {
+    const az = (i / 3) * TAU + rand() * 0.7;
     const tilt = 0.35 + rand() * 0.35;
     const d = dirFrom(az, tilt);
-    const len = 0.28 + rand() * 0.1;
+    const len = 0.3 + rand() * 0.12;
     const base = V3(Math.cos(az) * 0.04, -0.04, Math.sin(az) * 0.04);
-    const limb = new THREE.CylinderGeometry(0.042, 0.056, len, 4, 1, true);
+    const limb = new THREE.CylinderGeometry(0.046, 0.062, len, 6, 1, true);
     limb.translate(0, len / 2, 0);
-    parts.push(paint(orientTo(limb, base, d), '#ffffff'));
+    parts.push(scaleUV(paintUV(orientTo(limb, base, d), '#ffffff'), 2, 1.5));
     const end = base.clone().addScaledVector(d, len * 0.94);
     for (let k = 0; k < 2; k++) {
       const sgn = k === 0 ? 1 : -1;
       const az2 = az + sgn * (0.45 + rand() * 0.35);
-      const tilt2 = Math.max(0.12, tilt - 0.18 + rand() * 0.25);
-      const flen = 0.24 + rand() * 0.14;
-      const finger = new THREE.ConeGeometry(0.043, flen, 4, 1, true);
+      const tilt2 = Math.max(0.1, tilt - 0.2 + rand() * 0.25);
+      const flen = 0.26 + rand() * 0.16;
+      const finger = new THREE.CylinderGeometry(0.018, 0.047, flen, 6, 1, true);
       finger.translate(0, flen / 2, 0);
-      parts.push(paint(orientTo(finger, end, dirFrom(az2, tilt2)), '#ffffff'));
+      parts.push(scaleUV(paintUV(orientTo(finger, end, dirFrom(az2, tilt2)), '#ffffff'), 2, 1.5));
     }
   }
   const g = merge(parts);
-  const tip = new THREE.Color('#fff4dc');
-  shade(g, (x, y, z, r, gg, b) => {
-    const v = 0.62 + 0.38 * smoothstep(0.0, 0.42, y);
-    return mixC(r * v, gg * v, b * v, tip, smoothstep(0.36, 0.72, y) * 0.7);
-  });
-  spherifyNormals(g, V3(0, 0.15, 0), 0.35);
+  rampY(g, 0.0, 0.45, 0.6, '#fff4dc', 0.36, 0.72, 0.7);
+  spherifyNormals(g, V3(0, 0.15, 0), 0.4);
   return g;
 }
 
-// Brain coral: a squat lumpy dome, mottled like the meandering grooves, paler on the ridges. 72 triangles.
+// Brain coral: a squat, softly lumpy dome; the painted meander skin carries the grooves. 100 triangles.
 function brainGeo() {
-  const g = new THREE.SphereGeometry(0.5, 8, 5, 0, TAU, 0, Math.PI * 0.58);
+  const g = new THREE.SphereGeometry(0.5, 10, 5, 0, TAU, 0, Math.PI * 0.58);
   displace(g, (x, y, z) => {
-    const k = 0.9 + 0.22 * n3(x * 3.2, y * 3.2, z * 3.2, 71);
+    const k = 0.92 + 0.16 * n3(x * 3.2, y * 3.2, z * 3.2, 71);
     return [x * k * 1.02, y * k * 0.78 + 0.075, z * k];
   });
   g.computeVertexNormals();
-  const p = paint(g, '#ffffff');
-  const ridge = new THREE.Color('#fff8e8');
-  shade(p, (x, y, z, r, gg, b) => {
-    const v = (0.6 + 0.4 * smoothstep(0.0, 0.4, y)) * (0.85 + 0.15 * n3(x * 9, y * 9, z * 9, 72));
-    return mixC(r * v, gg * v, b * v, ridge, 0.25 * smoothstep(0.25, 0.45, y));
-  });
-  spherifyNormals(p, V3(0, -0.1, 0), 0.4);
+  const p = scaleUV(paintUV(g, '#ffffff'), 3, 1.6);
+  rampY(p, 0.0, 0.4, 0.62);
+  spherifyNormals(p, V3(0, -0.1, 0), 0.5);
   return p;
 }
 
@@ -469,80 +717,68 @@ function wavyPlate(rTop, rBot, thick, seg, cx, cy, cz, wave, ph) {
     return [x * k + cx, y + cy + wave * Math.sin(a * 2 + ph) * u + 0.05 * u * rTop, z * k + cz];
   });
   g.computeVertexNormals();
-  return paint(g, '#ffffff');
+  return scaleUV(paintUV(g, '#ffffff'), 3, 1);
 }
 
-// Table coral (Acropora hyacinthus): a wide flat plate with a wavy, pale growing rim on a short stalk,
-// plus a smaller tier to one side. 10 + 36 + 28 = 74 triangles.
+// Table coral (Acropora hyacinthus): wide wavy plate with a pale growing rim on a short stalk, plus a smaller
+// tier to one side. 16 + 56 + 40 = 112 triangles.
 function tableGeo() {
-  const stalk = new THREE.CylinderGeometry(0.05, 0.085, 0.36, 5, 1, true);
+  const stalk = new THREE.CylinderGeometry(0.05, 0.09, 0.36, 8, 1, true);
   stalk.translate(0, 0.16, 0);
-  const parts = [
-    paint(stalk, '#ffffff'),
-    wavyPlate(0.62, 0.52, 0.07, 9, 0.06, 0.37, 0, 0.035, 0.7),
-    wavyPlate(0.34, 0.28, 0.05, 7, 0.3, 0.22, -0.2, 0.02, 2.1),
-  ];
-  const g = merge(parts);
+  const g = merge([
+    paintUV(stalk, '#ffffff'),
+    wavyPlate(0.62, 0.52, 0.07, 14, 0.06, 0.37, 0, 0.035, 0.7),
+    wavyPlate(0.34, 0.28, 0.05, 10, 0.3, 0.22, -0.2, 0.02, 2.1),
+  ]);
   const rim = new THREE.Color('#f4fbff');
   shade(g, (x, y, z, r, gg, b) => {
-    const v = 0.6 + 0.4 * smoothstep(0.14, 0.42, y);
-    return mixC(r * v, gg * v, b * v, rim, smoothstep(0.45, 0.66, Math.hypot(x - 0.06, z)) * 0.45);
+    const v = 0.58 + 0.42 * smoothstep(0.14, 0.42, y);
+    return mixC(r * v, gg * v, b * v * 1.05, rim, smoothstep(0.45, 0.66, Math.hypot(x - 0.06, z)) * 0.45);
   });
-  spherifyNormals(g, V3(0, 0.1, 0), 0.15);
+  spherifyNormals(g, V3(0, 0.1, 0), 0.2);
   return g;
 }
 
-// Purple sea fan (Gorgonia ventalina): one flat, gently cupped fan, wider at the top, with a darker edge
-// standing in for the lattice and branch rims, on a short stalk. 42 + 8 = 50 triangles.
+// Purple sea fan (Gorgonia ventalina): one large gently cupped card carrying the painted lace and branches,
+// broadside to the current. 32 + 12 = 44 triangles. Alpha-cut, double sided.
 function fanGeo() {
-  const g = new THREE.SphereGeometry(1, 7, 4);
-  displace(g, (x, y, z) => {
-    const t = (y + 1) / 2;
-    const X = x * 0.44 * (0.42 + 0.7 * t);
-    const q = X / 0.45;
-    return [X, y * 0.44 + 0.5, z * 0.035 + 0.09 * q * q];
-  });
+  const g = new THREE.PlaneGeometry(1.0, 1.0, 4, 4);
+  displace(g, (x, y, z) => [x, y + 0.5, 0.18 * x * x + 0.05 * (y + 0.5) * (y + 0.5)]);
   g.computeVertexNormals();
-  const fan = paint(g, '#ffffff');
-  shade(fan, (x, y, z, r, gg, b) => {
-    const q = x / 0.45;
-    const edge = 1 - Math.min(1, Math.abs(z - 0.09 * q * q) / 0.035);
-    const v = (0.72 + 0.28 * smoothstep(0.06, 0.6, y)) * (1 - 0.24 * edge);
-    return [r * v, gg * v, b * v];
-  });
-  spherifyNormals(fan, V3(0, 0.5, 0), 0.35);
-  const stalk = new THREE.CylinderGeometry(0.016, 0.028, 0.14, 4, 1, true);
-  stalk.translate(0, 0.07, 0);
-  const st = paint(stalk, '#9a8aa8');
+  const fan = paintUV(g, '#ffffff');
+  rampY(fan, 0.0, 0.8, 0.7);
+  spherifyNormals(fan, V3(0, 0.45, -0.6), 0.35);
+  const stalk = new THREE.CylinderGeometry(0.014, 0.026, 0.06, 6, 1, true);
+  stalk.translate(0, 0.0, 0);
+  const st = scaleUV(paintUV(stalk, '#9a8aa8'), 0.02, 0.05, 0.5, 0.0);
   return merge([fan, st]);
 }
 
-// Bubble anemone: a pom-pom of fat tentacles (every other vertex pushed out), bright tips, darker column.
-// 72 triangles. Sways with the current through the shared uSway.
+// Bubble anemone: short column under a soft dome; the painted skin gives fat tentacles with glowing bulb tips,
+// and every other vertex is pushed out so the silhouette stays tufty. 16 + 80 = 96 triangles. Sways.
 function anemoneGeo() {
-  const W = 8;
-  const H = 5;
+  const col = new THREE.CylinderGeometry(0.15, 0.13, 0.1, 8, 1, true);
+  col.translate(0, 0.04, 0);
+  const W = 10;
+  const H = 4;
   const g = new THREE.SphereGeometry(0.22, W, H, 0, TAU, 0, Math.PI * 0.62);
   displace(g, (x, y, z, i) => {
     const iy = Math.floor(i / (W + 1));
     const ix = i % (W + 1);
-    const k = iy > 0 && iy < H && (ix + iy) % 2 === 1 ? 1.38 : 1.0;
+    const k = iy > 0 && iy < H && (ix + iy) % 2 === 1 ? 1.22 : 1.0;
     return [x * k, y * k * 0.85 + 0.05, z * k];
   });
   g.computeVertexNormals();
-  const p = paint(g, '#ffffff');
-  const tipC = new THREE.Color('#fffbe8');
-  shade(p, (x, y, z, r, gg, b) => {
-    const dist = Math.hypot(x, (y - 0.05) / 0.85, z) / 0.22;
-    const v = 0.62 + 0.38 * smoothstep(-0.03, 0.18, y);
-    return mixC(r * v, gg * v, b * v, tipC, smoothstep(1.1, 1.35, dist) * 0.6);
-  });
-  spherifyNormals(p, V3(0, 0.02, 0), 0.55);
-  return p;
+  const dome = scaleUV(paintUV(g, '#ffffff'), 2, 1);
+  const c = scaleUV(paintUV(col, '#c9a0b8'), 2, 0.1, 0, 0.0);
+  const m = merge([c, dome]);
+  rampY(m, -0.02, 0.2, 0.62);
+  spherifyNormals(m, V3(0, 0.02, 0), 0.55);
+  return m;
 }
 
 // Tube sponges: 4 flared tubes leaning out from one base, each with a dark recessed opening.
-// 4 x (10 + 5) = 60 triangles.
+// 4 x (16 + 8) = 96 triangles.
 function spongeGeo() {
   const tubes = [
     [0, 0, 0.62, 0.075],
@@ -555,38 +791,38 @@ function spongeGeo() {
     const lean = Math.hypot(x, z) > 0 ? 0.14 : 0;
     const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(z * lean * 6, 0, -x * lean * 6));
     m.setPosition(x, 0, z);
-    const tube = new THREE.CylinderGeometry(r * 1.25, r, hgt, 5, 1, true);
+    const tube = new THREE.CylinderGeometry(r * 1.25, r, hgt, 8, 1, true);
     tube.translate(0, hgt / 2, 0);
     tube.applyMatrix4(m);
-    const cap = new THREE.CircleGeometry(r * 0.98, 5);
+    const cap = new THREE.CircleGeometry(r * 0.98, 8);
     cap.rotateX(-Math.PI / 2);
     cap.translate(0, hgt - 0.02, 0);
     cap.applyMatrix4(m);
-    const t = paint(tube, '#ffffff');
+    const t = scaleUV(paintUV(tube, '#ffffff'), 1.5, 2);
     shade(t, (px, py, pz, cr, cg, cb) => {
-      const v = 0.6 + 0.4 * smoothstep(0.0, hgt, py);
-      return [cr * v, cg * v, cb * v];
+      const v = 0.58 + 0.42 * smoothstep(0.0, hgt, py);
+      return [cr * v, cg * v, cb * v * 1.06];
     });
-    parts.push(t, paint(cap, '#4a3550'));
+    parts.push(t, paintUV(cap, '#4a3550'));
   }
   const g = merge(parts);
-  spherifyNormals(g, V3(0, 0.1, 0), 0.25);
+  spherifyNormals(g, V3(0, 0.1, 0), 0.3);
   return g;
 }
 
-// Reef rock bommie: a lumpy, flattened boulder in cool violet-grey with green algae on top and pink
-// crustose-coralline patches, crowned by two cream soft-coral fingers. 80 + 16 = 96 triangles.
+// Reef rock bommie: a lumpy flattened boulder in cool violet-grey with green algae on top and pink
+// crustose-coralline patches, crowned by two cream soft-coral fingers. 80 + 24 = 104 triangles.
 function bommieGeo() {
   const g = new THREE.IcosahedronGeometry(0.6, 1);
   displace(g, (x, y, z) => {
-    const k = 0.82 + 0.36 * n3(x * 2.2 + 3, y * 2.2, z * 2.2, 81);
+    const k = 0.84 + 0.3 * n3(x * 2.2 + 3, y * 2.2, z * 2.2, 81);
     let Y = y * k * 0.62 + 0.14;
     if (Y < 0) Y *= 0.4;
     return [x * k * 1.05, Y, z * k];
   });
   g.computeVertexNormals();
-  const rock = paint(g, '#8c88a6');
-  spherifyNormals(rock, V3(0, 0.05, 0), 0.85);
+  const rock = scaleUV(paintUV(g, '#8c88a6'), 2, 2);
+  spherifyNormals(rock, V3(0, 0.05, 0), 0.9);
   const algae = new THREE.Color('#97b27e');
   const coralline = new THREE.Color('#e2a0b8');
   shade(rock, (x, y, z, r, gg, b) => {
@@ -601,10 +837,10 @@ function bommieGeo() {
     [-0.1, 0.38, -0.08, 0.24, -0.3],
   ];
   for (const [x, y, z, len, lean] of spots) {
-    const f = new THREE.ConeGeometry(0.07, len, 4, 1, true);
+    const f = new THREE.CylinderGeometry(0.03, 0.07, len, 6, 1, true);
     f.translate(0, len / 2, 0);
     orientTo(f, V3(x, y, z), V3(lean, 1, lean * 0.6));
-    const pf = paint(f, '#f3dfae');
+    const pf = paintUV(f, '#f3dfae');
     shade(pf, (px, py, pz, cr, cg, cb) => {
       const v = 0.7 + 0.3 * smoothstep(y, y + len, py);
       return [cr * v, cg * v, cb * v];
@@ -691,77 +927,36 @@ function crittersGeo() {
   return g;
 }
 
-// Turtle grass tuft: 3 flat ribbon blades from one node, curving outward, slightly twisted,
-// 3 segments each (2 quads + a tip triangle). 15 triangles. Drawn double sided.
+// Turtle-grass clump: 2 crossed, outward-bending cards each carrying 7 painted ribbon blades.
+// 2 x 8 = 16 triangles. Alpha-cut, double sided, sways with the shared current.
 function seagrassGeo() {
-  const rand = mulberry32(21);
-  const pos = [];
-  const nrm = [];
-  const levels = [0, 0.42, 0.76, 1];
-  for (let j = 0; j < 3; j++) {
-    const phi = (j / 3) * TAU + (rand() - 0.5) * 0.7;
-    const H = 0.8 + rand() * 0.2;
-    const lean = 0.25 + rand() * 0.25;
-    const lx = Math.cos(phi);
-    const lz = Math.sin(phi);
-    const L = [];
-    const R = [];
-    const N = [];
-    for (let i = 0; i < 4; i++) {
-      const t = levels[i];
-      const off = lean * t * t;
-      const cx = lx * (off + 0.01);
-      const cz = lz * (off + 0.01);
-      const y = t * H;
-      const w = i === 3 ? 0 : 0.035 * (1 - 0.35 * t);
-      const tw = phi + Math.PI / 2 + t * 0.6;
-      const sx = Math.cos(tw) * w;
-      const sz = Math.sin(tw) * w;
-      L.push([cx - sx, y, cz - sz]);
-      R.push([cx + sx, y, cz + sz]);
-      const nx = lx * 0.6;
-      const nz = lz * 0.6;
-      const len = Math.hypot(nx, 0.8, nz);
-      N.push([nx / len, 0.8 / len, nz / len]);
-    }
-    const tri = (a, na, b, nb, c, nc) => {
-      pos.push(...a, ...b, ...c);
-      nrm.push(...na, ...nb, ...nc);
-    };
-    for (let i = 0; i < 2; i++) {
-      // Wound so the geometric front faces outward, matching the outward-leaning normals.
-      tri(L[i], N[i], R[i + 1], N[i + 1], R[i], N[i]);
-      tri(L[i], N[i], L[i + 1], N[i + 1], R[i + 1], N[i + 1]);
-    }
-    tri(L[2], N[2], L[3], N[3], R[2], N[2]);
+  const parts = [];
+  for (let j = 0; j < 2; j++) {
+    const g = new THREE.PlaneGeometry(0.9, 1, 1, 4);
+    displace(g, (x, y, z) => {
+      const t = y + 0.5;
+      return [x, t, 0.22 * t * t + 0.06 * Math.abs(x)];
+    });
+    g.rotateY(j * Math.PI * 0.5 + 0.3);
+    g.computeVertexNormals();
+    const p = paintUV(g, '#ffffff');
+    rampY(p, 0.0, 0.7, 0.55);
+    // Normals lean up and out so the blades light like one soft tuft.
+    spherifyNormals(p, V3(0, -0.4, 0), 0.6);
+    parts.push(p);
   }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
-  const p = paint(g, '#ffffff');
-  const tipC = new THREE.Color('#fff3b0');
-  shade(p, (x, y, z, r, gg, b) => {
-    const v = 0.55 + 0.45 * smoothstep(0.0, 0.6, y);
-    return mixC(r * v, gg * v, b * v, tipC, smoothstep(0.7, 1.0, y) * 0.45);
-  });
-  return p;
+  return merge(parts);
 }
 
-// Reef fish: a deep, laterally compressed body (nose +x) with a darker back, pale belly and a forked tail.
-// 36 + 4 = 40 triangles.
+// Reef fish: a deep, laterally compressed smooth body (nose +x) with the painted bands, eyes and pale belly,
+// plus a forked tail sampling the painted fin strip. 64 + 4 = 68 triangles.
 function fishGeo() {
-  const body = new THREE.SphereGeometry(1, 6, 4);
+  const body = new THREE.SphereGeometry(1, 8, 4);
   body.rotateZ(-Math.PI / 2);
   body.scale(0.12, 0.072, 0.034);
   displace(body, (x, y, z) => [x > 0 ? x * 1.1 : x, y, z]);
   body.computeVertexNormals();
-  const b = paint(body, '#ffffff');
-  const belly = new THREE.Color('#ffffff');
-  shade(b, (x, y, z, r, g, bb) => {
-    const back = 1 - 0.24 * smoothstep(0.0, 0.06, y);
-    const c = [r * back, g * back, bb * back];
-    return mixC(c[0], c[1], c[2], belly, smoothstep(-0.02, -0.065, y) * 0.4);
-  });
+  const b = paintUV(body, '#ffffff');
   const root = [-0.105, 0, 0];
   const top = [-0.2, 0.062, 0];
   const bot = [-0.2, -0.062, 0];
@@ -769,41 +964,64 @@ function fishGeo() {
   const pos = [];
   const zz = 0.002;
   const face = (p0, p1, p2, dz) => pos.push(p0[0], p0[1], p0[2] + dz, p1[0], p1[1], p1[2] + dz, p2[0], p2[1], p2[2] + dz);
-  // Two single-sided skins 4 mm apart: the +z skin faces +z, the -z skin faces -z.
   face(root, top, notch, zz);
   face(root, notch, bot, zz);
   face(root, notch, top, -zz);
   face(root, bot, notch, -zz);
   const tail = new THREE.BufferGeometry();
   tail.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const uv = new Float32Array(24);
+  for (let i = 0; i < 12; i++) {
+    uv[i * 2] = 0.25 + (pos[i * 3 + 1] / 0.062) * 0.1;
+    uv[i * 2 + 1] = 0.02 + ((-0.105 - pos[i * 3]) / 0.095) * 0.05;
+  }
+  tail.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   tail.computeVertexNormals();
-  return merge([b, paint(tail, '#ffe6b8')]);
+  return merge([b, paintUV(tail, '#ffffff')]);
 }
 
 // ---------------------------------------------------------------- build + animate ----
 
 const PALETTES = {
   staghorn: ['#f2a07b', '#e8c27a', '#c9a3e6', '#f4b6c2'],
-  brain: ['#d8c15c', '#b5d36d', '#e9a96b', '#c79bd8'],
+  brain: ['#e2cb6a', '#bcd77a', '#eeb07a', '#cfa6e0'],
   table: ['#93d5c0', '#f0c483', '#b0a6ee', '#f2a38f'],
-  fan: ['#a879e0', '#c58be6', '#8f7bdc', '#e58fbf', '#f2c35e'],
-  anemone: ['#ff9fb6', '#ffc07c', '#c4e27c', '#d9a2ff'],
+  fan: ['#c48cf0', '#d79cf0', '#a890ec', '#f0a0cc', '#f6cf78'],
+  anemone: ['#ffb0c4', '#ffcf90', '#d4ec90', '#e4b4ff'],
   sponge: ['#ffd04f', '#b57be0', '#ff8f5c', '#ff7aa2'],
   bommie: ['#f4f0ff', '#fff4ec', '#eef6ff'],
   critters: ['#ffffff', '#fff2e6', '#f3f0ff'],
-  seagrass: ['#7cc46a', '#9fd36b', '#5fb88a'],
+  seagrass: ['#ffffff', '#f4ffe0', '#e8fff2'],
+};
+
+// Painted maps: key, draw, size, repeat. Sizes kept small for the phone (about 3.3 MB of texture in total).
+const TEX = {
+  skin: ['reef-skin', drawCoralSkin, 256, true],
+  brain: ['reef-brain', drawBrain, 256, true],
+  fan: ['reef-fan', drawFan, 512, false],
+  anemone: ['reef-anemone', drawAnemone, 256, true],
+  grass: ['reef-seagrass', drawSeagrass, 512, false],
+  fish: ['reef-fish', drawFish, 256, false],
 };
 
 function buildReef(Q) {
+  const tex = {};
+  for (const k of Object.keys(TEX)) {
+    const [key, draw, size, repeat] = TEX[k];
+    tex[k] = paintTexture(key, draw, { size, seed: 31, repeat });
+  }
+  const F = THREE.FrontSide;
   const mats = {
-    coral: cozyMaterial({ wrap: 0.65, rim: 0.3, aoScale: 0.9 }),
-    fan: cozyMaterial({ wrap: 0.8, rim: 0.5, aoScale: 0.7, sway: 0.05 }),
-    anemone: cozyMaterial({ wrap: 0.75, rim: 0.35, aoScale: 1.6, sway: 0.35 }),
-    grass: cozyMaterial({ wrap: 0.85, rim: 0.3, aoScale: 0.5, sway: 0.16, side: THREE.DoubleSide }),
-    fish: cozyMaterial({ wrap: 0.6, rim: 0.45, aoScale: 0 }),
+    coral: leafMaterial({ map: tex.skin, wrap: 0.65, rim: 0.3, trans: 0.1, cut: 0.3, aoScale: 0.9, side: F }),
+    brain: leafMaterial({ map: tex.brain, wrap: 0.65, rim: 0.3, trans: 0.05, cut: 0.3, aoScale: 0.9, side: F }),
+    fan: leafMaterial({ map: tex.fan, wrap: 0.8, rim: 0.45, trans: 0.5, cut: 0.45, aoScale: 0.6, sway: 0.05 }),
+    anemone: leafMaterial({ map: tex.anemone, wrap: 0.75, rim: 0.35, trans: 0.3, cut: 0.3, aoScale: 1.6, sway: 0.35, side: F }),
+    grass: leafMaterial({ map: tex.grass, wrap: 0.85, rim: 0.3, trans: 0.45, cut: 0.5, aoScale: 0.5, sway: 0.16 }),
+    fish: leafMaterial({ map: tex.fish, wrap: 0.6, rim: 0.45, trans: 0.1, cut: 0.3, aoScale: 0, side: F }),
+    critters: cozyMaterial({ wrap: 0.65, rim: 0.3, aoScale: 0.9 }),
   };
   // aoScale 0 leaves the shared AO at its 0.6 floor; lift the fish base tint so they stay bright.
-  mats.fish.uniforms.uColor.value.setScalar(1.55);
+  mats.fish.uniforms.uColor.value.setScalar(1.5);
 
   const geos = {
     staghorn: staghornGeo(),
@@ -831,7 +1049,8 @@ function buildReef(Q) {
     return scratch;
   };
 
-  const matFor = { staghorn: 'coral', brain: 'coral', table: 'coral', fan: 'fan', anemone: 'anemone', sponge: 'coral', bommie: 'coral', critters: 'coral', seagrass: 'grass' };
+  // Staghorn, table, sponge and bommie share one material (same map), but stay separate meshes (one per species).
+  const matFor = { staghorn: 'coral', brain: 'brain', table: 'coral', fan: 'fan', anemone: 'anemone', sponge: 'coral', bommie: 'coral', critters: 'critters', seagrass: 'grass' };
   const meshes = [];
   const parts = {};
   for (const k of Object.keys(matFor)) {
@@ -930,13 +1149,20 @@ function buildReef(Q) {
 
 export default function Reef({ Q, tier }) {
   const reef = useMemo(() => buildReef(Q), [Q.coral, Q.seagrass, Q.fish]);
+  const group = useRef(null);
 
   useEffect(() => {
     report('Reef.js', { draws: reef.draws, triangles: reef.triangles, programs: 2, tier, counts: reef.parts });
   }, [reef, tier]);
   useEffect(() => () => reef.dispose(), [reef]);
 
-  useFrame((state) => reef.animate(shared.uTime.value, state.camera));
+  useFrame((state) => {
+    const cam = state.camera.position;
+    // Hide the whole reef (0 draws) when the camera is more than ~150 m from it.
+    const far = Math.hypot(cam.x - FOCUS_X, cam.z - FOCUS_Z) > 150 + Math.max(0, cam.y - 40);
+    if (group.current) group.current.visible = !far;
+    if (!far) reef.animate(shared.uTime.value, state.camera);
+  });
 
-  return h('group', { name: 'reef' }, reef.meshes.map((m) => h('primitive', { key: m.name, object: m })));
+  return h('group', { name: 'reef', ref: group }, reef.meshes.map((m) => h('primitive', { key: m.name, object: m })));
 }
