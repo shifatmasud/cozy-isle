@@ -2,7 +2,7 @@
   "tool": "shade-device-lab",
   "version": 1,
   "url": "https://cozy-isle.vercel.app/?lab=1",
-  "when": "2026-11-22T11:17:13.866Z",
+  "when": "2026-11-22T11:53:26.281Z",
   "device": {
     "id": "phone",
     "name": "Shifat's phone (Samsung Galaxy M02s, Adreno 506)"
@@ -23,8 +23,8 @@
     },
     "cpuRate": 6,
     "cpuMode": "fallback (not calibrated on the real device)",
-    "hostBenchMs": 71.5,
-    "effectiveCpuRate": 6.45,
+    "hostBenchMs": 104.6,
+    "effectiveCpuRate": 6.83,
     "webglShim": true,
     "heapCapMb": null
   },
@@ -41,7 +41,7 @@
     },
     "largest": [
       {
-        "file": "index-CYGpM4X9.js",
+        "file": "index-Dfie3GJ7.js",
         "type": "Script",
         "mb": 0.4
       },
@@ -76,45 +76,45 @@
         "mb": 0
       }
     ],
-    "lastByteMs": 1346.3,
-    "ttfbMs": 251.4,
-    "fcpMs": 1352,
-    "domContentLoadedMs": 992.6,
-    "loadEventMs": 993.7,
-    "firstDrawMs": 4661.2,
+    "lastByteMs": 1945.8,
+    "ttfbMs": 222,
+    "fcpMs": 1680,
+    "domContentLoadedMs": 1037,
+    "loadEventMs": 1037.2,
+    "firstDrawMs": 7638.1,
     "timeToSmoothMs": null,
     "loadPhaseLongTasks": {
-      "count": 2,
-      "perMin": 102.2,
-      "longestMs": 92,
-      "totalMs": 160,
-      "blockingMs": 60,
-      "blockingMsPerMin": 3065.9
+      "count": 4,
+      "perMin": 135.1,
+      "longestMs": 148,
+      "totalMs": 441,
+      "blockingMs": 241,
+      "blockingMsPerMin": 8137.8
     },
     "error": null
   },
   "play": {
     "frames": {
-      "frames": 357,
-      "seconds": 36.8,
-      "avgFps": 9.7,
+      "frames": 211,
+      "seconds": 40.7,
+      "avgFps": 5.2,
       "frameMs": {
-        "n": 356,
-        "mean": 103.4,
-        "p50": 100,
-        "p90": 183.3,
-        "p95": 183.4,
-        "p99": 283.4,
-        "max": 483.4,
-        "sd": 57.1
+        "n": 210,
+        "mean": 193.8,
+        "p50": 183.3,
+        "p90": 349.9,
+        "p95": 383.3,
+        "p99": 400,
+        "max": 1000,
+        "sd": 100.7
       },
-      "overBudgetPct": 87.1,
-      "hitches": 116,
-      "hitchesPerMin": 189.1,
-      "jitterMs": 60.9,
-      "longestFrameMs": 483.4,
+      "overBudgetPct": 94.3,
+      "hitches": 182,
+      "hitchesPerMin": 268.3,
+      "jitterMs": 97.7,
+      "longestFrameMs": 1000,
       "drawsPerFrame": {
-        "n": 356,
+        "n": 210,
         "mean": 37,
         "p50": 37,
         "p90": 37,
@@ -124,7 +124,7 @@
         "sd": 0
       },
       "trisPerFrame": {
-        "n": 356,
+        "n": 210,
         "mean": 164798,
         "p50": 164798,
         "p90": 164798,
@@ -137,64 +137,46 @@
     },
     "longTasks": {
       "count": 1,
-      "perMin": 1.6,
-      "longestMs": 370,
-      "totalMs": 370,
-      "blockingMs": 320,
-      "blockingMsPerMin": 519.2
+      "perMin": 1.5,
+      "longestMs": 997,
+      "totalMs": 997,
+      "blockingMs": 947,
+      "blockingMsPerMin": 1387.4
     },
-    "mainThreadBusyPct": 9.3,
+    "mainThreadBusyPct": 6.1,
     "topScripts": [
       {
-        "script": "o @ index-CYGpM4X9.js",
-        "ms": 967,
-        "count": 89,
-        "longestMs": 368.8
-      },
-      {
-        "script": "B @ index-CYGpM4X9.js",
-        "ms": 30.6,
-        "count": 2,
-        "longestMs": 22
+        "script": "o @ index-Dfie3GJ7.js",
+        "ms": 1933.6,
+        "count": 132,
+        "longestMs": 990.3
       },
       {
         "script": "FrameRequestCallback @ ",
-        "ms": 13,
+        "ms": 14.1,
         "count": 2,
-        "longestMs": 6.9
+        "longestMs": 7.6
       },
       {
-        "script": "CO @ index-CYGpM4X9.js",
-        "ms": 8.1,
+        "script": "x @ index-Dfie3GJ7.js",
+        "ms": 12.2,
         "count": 1,
-        "longestMs": 8.1
+        "longestMs": 12.2
       },
       {
-        "script": "x @ index-CYGpM4X9.js",
-        "ms": 7.4,
+        "script": "TimerHandler:setTimeout @ index-Dfie3GJ7.js",
+        "ms": 5.1,
         "count": 1,
-        "longestMs": 7.4
-      },
-      {
-        "script": "TimerHandler:setInterval @ index-CYGpM4X9.js",
-        "ms": 6.3,
-        "count": 1,
-        "longestMs": 6.3
-      },
-      {
-        "script": "a @ index-CYGpM4X9.js",
-        "ms": 6,
-        "count": 1,
-        "longestMs": 6
+        "longestMs": 5.1
       }
     ]
   },
   "drift": {
-    "firstThirdP50Ms": 100,
-    "lastThirdP50Ms": 83.4,
-    "firstThirdP95Ms": 183.3,
-    "lastThirdP95Ms": 183.3,
-    "heapGrowthMbPerMin": 1.38,
+    "firstThirdP50Ms": 183.3,
+    "lastThirdP50Ms": 183.3,
+    "firstThirdP95Ms": 350,
+    "lastThirdP95Ms": 400,
+    "heapGrowthMbPerMin": 0.56,
     "gpuGrowthMbPerMin": 0
   },
   "gpu": {
@@ -203,14 +185,14 @@
     "spoofedRenderer": "ANGLE (Qualcomm, Adreno (TM) 506, OpenGL ES 3.2 V@415.0 (GIT@7677c8b89e Id4b4c8da21 1589356105) (Date:05/13/20))",
     "contexts": 2,
     "programs": 6,
-    "shaderLinkMs": 35,
-    "shaderCompileMs": 0,
+    "shaderLinkMs": 27.2,
+    "shaderCompileMs": 1.3,
     "linkCount": 7,
     "textures": 24,
     "largestTexturePx": 2048,
     "oversizeTextures": 0,
     "drawsPerFrame": {
-      "n": 356,
+      "n": 210,
       "mean": 37,
       "p50": 37,
       "p90": 37,
@@ -220,7 +202,7 @@
       "sd": 0
     },
     "trisPerFrame": {
-      "n": 356,
+      "n": 210,
       "mean": 164798,
       "p50": 164798,
       "p90": 164798,
@@ -230,16 +212,16 @@
       "sd": 0
     },
     "canvasPixelsMax": 278944,
-    "gpuProcessCoresPlay": 2.91
+    "gpuProcessCoresPlay": 3.08
   },
   "memory": {
-    "jsHeapPeakMb": 32.5,
+    "jsHeapPeakMb": 40.1,
     "gpuEstPeakMb": 35.9,
-    "combinedPeakMb": 50.7,
-    "heapGrowthMbPerMin": 1.38,
+    "combinedPeakMb": 76,
+    "heapGrowthMbPerMin": 0.56,
     "gpuGrowthMbPerMin": 0,
-    "hostRendererRssPeakMb": 529.2,
-    "hostGpuProcessRssPeakMb": 318.1,
+    "hostRendererRssPeakMb": 528.2,
+    "hostGpuProcessRssPeakMb": 297.5,
     "heapCapMb": null,
     "endGpu": {
       "gpuEstMb": 35.893272399902344,
@@ -253,27 +235,27 @@
     {
       "name": "load",
       "a": 0,
-      "b": 1174.2000000000116,
-      "seconds": 1.2,
+      "b": 1776.8999999999942,
+      "seconds": 1.8,
       "frames": {
         "frames": 21,
-        "seconds": 0.5,
-        "avgFps": 38.7,
+        "seconds": 1.2,
+        "avgFps": 17.4,
         "frameMs": {
           "n": 20,
-          "mean": 25.8,
+          "mean": 57.5,
           "p50": 16.7,
-          "p90": 16.7,
-          "p95": 66.6,
-          "p99": 150,
-          "max": 150,
-          "sd": 30.5
+          "p90": 133.3,
+          "p95": 233.4,
+          "p99": 383.3,
+          "max": 383.3,
+          "sd": 92.1
         },
-        "overBudgetPct": 10,
-        "hitches": 1,
-        "hitchesPerMin": 116.1,
-        "jitterMs": 7.1,
-        "longestFrameMs": 150,
+        "overBudgetPct": 25,
+        "hitches": 3,
+        "hitchesPerMin": 156.5,
+        "jitterMs": 36.1,
+        "longestFrameMs": 383.3,
         "drawsPerFrame": {
           "n": 20,
           "mean": 0,
@@ -297,41 +279,41 @@
         "canvasPixelsMax": 45000
       },
       "longTasks": {
-        "count": 2,
-        "perMin": 102.2,
-        "longestMs": 92,
-        "totalMs": 160,
-        "blockingMs": 60,
-        "blockingMsPerMin": 3065.9
+        "count": 4,
+        "perMin": 135.1,
+        "longestMs": 148,
+        "totalMs": 441,
+        "blockingMs": 241,
+        "blockingMsPerMin": 8137.8
       },
-      "mainThreadBusyPct": null,
-      "rendererCores": null,
-      "gpuProcessCores": null
+      "mainThreadBusyPct": 42,
+      "rendererCores": 1.27,
+      "gpuProcessCores": 0.94
     },
     {
       "name": "loaded",
-      "a": 1174.2000000000116,
-      "b": 12902.5,
-      "seconds": 11.7,
+      "a": 1776.8999999999942,
+      "b": 22452.70000000001,
+      "seconds": 20.7,
       "frames": {
         "frames": 13,
-        "seconds": 11.4,
-        "avgFps": 1.1,
+        "seconds": 20.6,
+        "avgFps": 0.6,
         "frameMs": {
           "n": 12,
-          "mean": 950,
-          "p50": 150.1,
-          "p90": 266.6,
-          "p95": 9882.9,
-          "p99": 9882.9,
-          "max": 9882.9,
-          "sd": 2694.2
+          "mean": 1715.2,
+          "p50": 200,
+          "p90": 383.3,
+          "p95": 18349.2,
+          "p99": 18349.2,
+          "max": 18349.2,
+          "sd": 5015.8
         },
-        "overBudgetPct": 83.3,
-        "hitches": 9,
-        "hitchesPerMin": 47.4,
-        "jitterMs": 1839.3,
-        "longestFrameMs": 9882.9,
+        "overBudgetPct": 100,
+        "hitches": 11,
+        "hitchesPerMin": 32.1,
+        "jitterMs": 3372.6,
+        "longestFrameMs": 18349.2,
         "drawsPerFrame": {
           "n": 12,
           "mean": 34,
@@ -355,43 +337,43 @@
         "canvasPixelsMax": 278944
       },
       "longTasks": {
-        "count": 3,
-        "perMin": 15.3,
-        "longestMs": 6592,
-        "totalMs": 10026,
-        "blockingMs": 9876,
-        "blockingMsPerMin": 50523.9
+        "count": 4,
+        "perMin": 11.6,
+        "longestMs": 12604,
+        "totalMs": 18464,
+        "blockingMs": 18264,
+        "blockingMsPerMin": 53001.1
       },
-      "mainThreadBusyPct": 91.9,
-      "rendererCores": 0.89,
-      "gpuProcessCores": 1.89
+      "mainThreadBusyPct": 91.7,
+      "rendererCores": 0.08,
+      "gpuProcessCores": 0.31
     },
     {
       "name": "play",
-      "a": 12902.5,
-      "b": 29603.20000000001,
-      "seconds": 16.7,
+      "a": 22452.70000000001,
+      "b": 42866,
+      "seconds": 20.4,
       "frames": {
-        "frames": 144,
-        "seconds": 16.5,
-        "avgFps": 8.6,
+        "frames": 102,
+        "seconds": 20.2,
+        "avgFps": 5,
         "frameMs": {
-          "n": 143,
-          "mean": 115.6,
-          "p50": 100,
-          "p90": 200,
-          "p95": 266.6,
-          "p99": 383.3,
-          "max": 483.4,
-          "sd": 71.9
+          "n": 101,
+          "mean": 200.3,
+          "p50": 199.9,
+          "p90": 283.3,
+          "p95": 383.3,
+          "p99": 383.4,
+          "max": 1000,
+          "sd": 110.8
         },
-        "overBudgetPct": 86,
-        "hitches": 63,
-        "hitchesPerMin": 228.6,
-        "jitterMs": 77,
-        "longestFrameMs": 483.4,
+        "overBudgetPct": 96,
+        "hitches": 90,
+        "hitchesPerMin": 266.9,
+        "jitterMs": 91.7,
+        "longestFrameMs": 1000,
         "drawsPerFrame": {
-          "n": 143,
+          "n": 101,
           "mean": 37,
           "p50": 37,
           "p90": 37,
@@ -401,7 +383,7 @@
           "sd": 0
         },
         "trisPerFrame": {
-          "n": 143,
+          "n": 101,
           "mean": 164798,
           "p50": 164798,
           "p90": 164798,
@@ -414,42 +396,42 @@
       },
       "longTasks": {
         "count": 1,
-        "perMin": 3.6,
-        "longestMs": 370,
-        "totalMs": 370,
-        "blockingMs": 320,
-        "blockingMsPerMin": 1149.7
+        "perMin": 2.9,
+        "longestMs": 997,
+        "totalMs": 997,
+        "blockingMs": 947,
+        "blockingMsPerMin": 2783.5
       },
-      "mainThreadBusyPct": 10.3,
-      "rendererCores": 0.79,
-      "gpuProcessCores": 2.72
+      "mainThreadBusyPct": 7.1,
+      "rendererCores": 0.72,
+      "gpuProcessCores": 3.08
     },
     {
       "name": "steady",
-      "a": 29603.20000000001,
-      "b": 49609.90000000002,
+      "a": 42866,
+      "b": 62869.899999999965,
       "seconds": 20,
       "frames": {
-        "frames": 209,
-        "seconds": 19.8,
-        "avgFps": 10.5,
+        "frames": 105,
+        "seconds": 19.7,
+        "avgFps": 5.3,
         "frameMs": {
-          "n": 208,
-          "mean": 95.1,
-          "p50": 99.9,
-          "p90": 166.7,
-          "p95": 183.3,
-          "p99": 183.4,
-          "max": 200.1,
-          "sd": 42.3
+          "n": 104,
+          "mean": 189.1,
+          "p50": 183.3,
+          "p90": 349.9,
+          "p95": 366.6,
+          "p99": 400,
+          "max": 416.6,
+          "sd": 91.3
         },
-        "overBudgetPct": 87.5,
-        "hitches": 51,
-        "hitchesPerMin": 154.7,
-        "jitterMs": 50.6,
-        "longestFrameMs": 200.1,
+        "overBudgetPct": 92.3,
+        "hitches": 88,
+        "hitchesPerMin": 268.5,
+        "jitterMs": 105.2,
+        "longestFrameMs": 416.6,
         "drawsPerFrame": {
-          "n": 208,
+          "n": 104,
           "mean": 37,
           "p50": 37,
           "p90": 37,
@@ -459,7 +441,7 @@
           "sd": 0
         },
         "trisPerFrame": {
-          "n": 208,
+          "n": 104,
           "mean": 164798,
           "p50": 164798,
           "p90": 164798,
@@ -478,9 +460,9 @@
         "blockingMs": 0,
         "blockingMsPerMin": 0
       },
-      "mainThreadBusyPct": 8.2,
-      "rendererCores": 0.79,
-      "gpuProcessCores": 3.07
+      "mainThreadBusyPct": 5.2,
+      "rendererCores": 0.73,
+      "gpuProcessCores": 3.09
     }
   ],
   "cpuProfile": null,
@@ -489,7 +471,7 @@
       "area": "smooth",
       "id": "avgFps",
       "label": "Average FPS during play",
-      "value": 9.7,
+      "value": 5.2,
       "target": 25,
       "op": ">=",
       "unit": "fps",
@@ -501,7 +483,7 @@
       "area": "smooth",
       "id": "p95FrameMs",
       "label": "95% of frames faster than",
-      "value": 183.4,
+      "value": 383.3,
       "target": 50,
       "op": "<=",
       "unit": "ms",
@@ -513,7 +495,7 @@
       "area": "smooth",
       "id": "p99FrameMs",
       "label": "99% of frames faster than",
-      "value": 283.4,
+      "value": 400,
       "target": 67,
       "op": "<=",
       "unit": "ms",
@@ -525,7 +507,7 @@
       "area": "smooth",
       "id": "overBudgetPct",
       "label": "Frames slower than 40 ms",
-      "value": 87.1,
+      "value": 94.3,
       "target": 10,
       "op": "<=",
       "unit": "%",
@@ -537,7 +519,7 @@
       "area": "smooth",
       "id": "jitterMs",
       "label": "Frame-to-frame change (steadiness)",
-      "value": 60.9,
+      "value": 97.7,
       "target": 8,
       "op": "<=",
       "unit": "ms",
@@ -549,7 +531,7 @@
       "area": "smooth",
       "id": "hitchesPerMin",
       "label": "Hitches over 100 ms per minute",
-      "value": 189.1,
+      "value": 268.3,
       "target": 2,
       "op": "<=",
       "unit": "/min",
@@ -561,7 +543,7 @@
       "area": "smooth",
       "id": "driftPct",
       "label": "Slowdown from start to end of steady play",
-      "value": -16.6,
+      "value": 0,
       "target": 15,
       "op": "<=",
       "unit": "%",
@@ -573,7 +555,7 @@
       "area": "cpu",
       "id": "mainThreadBusyPct",
       "label": "Main thread busy during play",
-      "value": 9.3,
+      "value": 6.1,
       "target": 70,
       "op": "<=",
       "unit": "%",
@@ -585,7 +567,7 @@
       "area": "cpu",
       "id": "longestTaskMs",
       "label": "Longest main-thread task during play",
-      "value": 370,
+      "value": 997,
       "target": 100,
       "op": "<=",
       "unit": "ms",
@@ -597,11 +579,11 @@
       "area": "cpu",
       "id": "blockingMsPerMin",
       "label": "Blocking time per minute during play",
-      "value": 519.2,
+      "value": 1387.4,
       "target": 1000,
       "op": "<=",
       "unit": "ms/min",
-      "result": "pass",
+      "result": "fail",
       "confidence": "low",
       "why": "CPU slowdown is a guess until the device is calibrated."
     },
@@ -657,7 +639,7 @@
       "area": "gpu",
       "id": "shaderLinkMs",
       "label": "Time blocked on shader compile and link",
-      "value": 35,
+      "value": 27.2,
       "target": 2000,
       "op": "<=",
       "unit": "ms",
@@ -681,7 +663,7 @@
       "area": "memory",
       "id": "jsHeapPeakMb",
       "label": "JavaScript heap peak",
-      "value": 32.5,
+      "value": 40.1,
       "target": 200,
       "op": "<=",
       "unit": "MB",
@@ -705,7 +687,7 @@
       "area": "memory",
       "id": "combinedPeakMb",
       "label": "Heap plus GPU estimate peak",
-      "value": 50.7,
+      "value": 76,
       "target": 400,
       "op": "<=",
       "unit": "MB",
@@ -717,7 +699,7 @@
       "area": "memory",
       "id": "heapGrowthMbPerMin",
       "label": "Heap growth during steady play",
-      "value": 1.38,
+      "value": 0.56,
       "target": 5,
       "op": "<=",
       "unit": "MB/min",
@@ -753,7 +735,7 @@
       "area": "load",
       "id": "firstDrawMs",
       "label": "Time to first WebGL draw",
-      "value": 4661.2,
+      "value": 7638.1,
       "target": 20000,
       "op": "<=",
       "unit": "ms",
