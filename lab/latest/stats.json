@@ -1,107 +1,107 @@
 {
-  "at": "2026-11-22T10:53:56.300Z",
-  "sha": "2692ff7b807210fcc59b6017b9e206ae5416bae4",
+  "at": "2026-11-22T11:14:04.009Z",
+  "sha": "b5b5d826927be24132545fb3323397a7880329f6",
   "url": "https://cozy-isle.vercel.app",
   "devices": {
     "phone": {
       "tier": "low",
-      "readyMs": 1091,
+      "readyMs": 7670,
       "overview": {
         "tier": "low",
         "dpr": 0.836,
         "canvasPixels": 229792,
-        "calls": 25,
-        "triangles": 139815,
+        "calls": 22,
+        "triangles": 88910,
         "peakCalls": 41,
-        "peakTriangles": 243131,
-        "programs": 5,
-        "geometries": 41,
-        "textures": 2,
-        "fpsCloud": 9,
-        "p95ms": 229.6,
-        "jsHeapMb": 20,
-        "frames": 360
+        "peakTriangles": 202004,
+        "programs": 6,
+        "geometries": 43,
+        "textures": 23,
+        "fpsCloud": 15,
+        "p95ms": 121.1,
+        "jsHeapMb": 17,
+        "frames": 480
       },
       "views": {
         "forest": {
           "tier": "low",
           "dpr": 0.836,
           "canvasPixels": 229792,
-          "calls": 23,
-          "triangles": 191111,
-          "peakCalls": 41,
-          "peakTriangles": 243131,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 9,
-          "p95ms": 267,
-          "jsHeapMb": 20,
-          "frames": 120
+          "calls": 21,
+          "triangles": 126464,
+          "peakCalls": 37,
+          "peakTriangles": 164798,
+          "programs": 6,
+          "geometries": 37,
+          "textures": 21,
+          "fpsCloud": 15,
+          "p95ms": 151.2,
+          "jsHeapMb": 17,
+          "frames": 180
         },
         "meadow": {
           "tier": "low",
           "dpr": 0.836,
           "canvasPixels": 229792,
-          "calls": 29,
-          "triangles": 212233,
-          "peakCalls": 41,
-          "peakTriangles": 243131,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 8,
-          "p95ms": 239.9,
-          "jsHeapMb": 20,
-          "frames": 180
+          "calls": 31,
+          "triangles": 172418,
+          "peakCalls": 37,
+          "peakTriangles": 172418,
+          "programs": 6,
+          "geometries": 42,
+          "textures": 23,
+          "fpsCloud": 13,
+          "p95ms": 166.6,
+          "jsHeapMb": 17,
+          "frames": 240
         },
         "tropics": {
           "tier": "low",
           "dpr": 0.836,
           "canvasPixels": 229792,
-          "calls": 40,
-          "triangles": 242529,
+          "calls": 41,
+          "triangles": 169726,
           "peakCalls": 41,
-          "peakTriangles": 243131,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 9,
-          "p95ms": 234.4,
-          "jsHeapMb": 20,
-          "frames": 240
+          "peakTriangles": 202004,
+          "programs": 6,
+          "geometries": 42,
+          "textures": 23,
+          "fpsCloud": 8,
+          "p95ms": 300.9,
+          "jsHeapMb": 17,
+          "frames": 300
         },
         "desert": {
           "tier": "low",
           "dpr": 0.836,
           "canvasPixels": 229792,
-          "calls": 29,
-          "triangles": 212233,
+          "calls": 25,
+          "triangles": 131914,
           "peakCalls": 41,
-          "peakTriangles": 243131,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 8,
-          "p95ms": 235,
-          "jsHeapMb": 20,
-          "frames": 300
+          "peakTriangles": 202004,
+          "programs": 6,
+          "geometries": 43,
+          "textures": 23,
+          "fpsCloud": 9,
+          "p95ms": 168.4,
+          "jsHeapMb": 17,
+          "frames": 360
         },
         "reef": {
           "tier": "low",
           "dpr": 0.836,
           "canvasPixels": 229792,
-          "calls": 25,
-          "triangles": 139815,
+          "calls": 22,
+          "triangles": 88910,
           "peakCalls": 41,
-          "peakTriangles": 243131,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 9,
-          "p95ms": 229.6,
-          "jsHeapMb": 20,
-          "frames": 360
+          "peakTriangles": 202004,
+          "programs": 6,
+          "geometries": 43,
+          "textures": 23,
+          "fpsCloud": 15,
+          "p95ms": 121.1,
+          "jsHeapMb": 17,
+          "frames": 480
         }
       },
       "parts": {
@@ -111,13 +111,13 @@
           "programs": 1
         },
         "ocean": {
-          "draws": 1,
-          "triangles": 13770,
+          "draws": 2,
+          "triangles": 5966,
           "programs": 1
         },
         "temperate": {
           "draws": 8,
-          "triangles": 56700,
+          "triangles": 58940,
           "programs": 1,
           "counts": {
             "pine": 150,
@@ -128,36 +128,41 @@
         },
         "tropical": {
           "draws": 11,
-          "triangles": 36461,
+          "triangles": 35370,
           "programs": 2
         },
         "GroundCover.js": {
-          "draws": 6,
-          "triangles": 73596,
+          "draws": 7,
+          "triangles": 72320,
           "programs": 1,
           "budget": 75000,
           "detail": {
-            "tallSeg": 2,
-            "fronds": 12
+            "fronds": 11,
+            "textureSize": 512,
+            "cull": {
+              "grass": 70,
+              "flowers": 50,
+              "ferns": 95
+            }
           },
           "counts": {
-            "grass-tall": 1200,
-            "grass-fluffy": 1680,
-            "fern": 220,
-            "flower-stem": 1600,
-            "flower-star": 1082,
-            "flower-ball": 518,
-            "grassBlades": 12000
+            "grass-curly": 1046,
+            "grass-fluffy": 846,
+            "grass-dry": 108,
+            "grass-long": 200,
+            "flowers-warm": 226,
+            "flowers-cool": 174,
+            "fern": 220
           }
         },
         "terrain": {
-          "draws": 4,
-          "triangles": 36422,
+          "draws": 5,
+          "triangles": 36722,
           "programs": 2
         },
         "Reef.js": {
           "draws": 10,
-          "triangles": 26170,
+          "triangles": 27788,
           "programs": 2,
           "tier": "low",
           "counts": {
@@ -169,115 +174,116 @@
             "sponge": 24,
             "bommie": 24,
             "critters": 36,
-            "seagrass": 540,
+            "seagrass": 270,
             "fish": 48
           }
         }
       },
       "errors": [],
       "logs": [
-        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "warning: Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
       ]
     },
     "laptop": {
       "tier": "medium",
-      "readyMs": 1101,
+      "readyMs": 5797,
       "overview": {
         "tier": "medium",
         "dpr": 0.836,
         "canvasPixels": 595602,
-        "calls": 25,
-        "triangles": 303669,
-        "peakCalls": 41,
-        "peakTriangles": 488468,
-        "programs": 5,
-        "geometries": 41,
-        "textures": 2,
-        "fpsCloud": 3,
-        "p95ms": 717.7,
+        "calls": 22,
+        "triangles": 192474,
+        "peakCalls": 43,
+        "peakTriangles": 424498,
+        "programs": 6,
+        "geometries": 43,
+        "textures": 23,
+        "fpsCloud": 2,
+        "p95ms": 1200.3,
         "jsHeapMb": 30,
-        "frames": 240
+        "frames": 270
       },
       "views": {
         "forest": {
           "tier": "medium",
-          "dpr": 0.921,
-          "canvasPixels": 723350,
-          "calls": 32,
-          "triangles": 454298,
-          "peakCalls": 41,
-          "peakTriangles": 488468,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
+          "dpr": 0.836,
+          "canvasPixels": 595602,
+          "calls": 29,
+          "triangles": 332126,
+          "peakCalls": 37,
+          "peakTriangles": 332126,
+          "programs": 6,
+          "geometries": 37,
+          "textures": 21,
           "fpsCloud": 5,
-          "p95ms": 796.1,
+          "p95ms": 467.7,
           "jsHeapMb": 30,
-          "frames": 60
+          "frames": 90
         },
         "meadow": {
           "tier": "medium",
-          "dpr": 0.921,
-          "canvasPixels": 723350,
-          "calls": 41,
-          "triangles": 488468,
-          "peakCalls": 41,
-          "peakTriangles": 488468,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 4,
-          "p95ms": 684.1,
-          "jsHeapMb": 30,
-          "frames": 120
-        },
-        "tropics": {
-          "tier": "medium",
-          "dpr": 0.921,
-          "canvasPixels": 723350,
-          "calls": 41,
-          "triangles": 488468,
-          "peakCalls": 41,
-          "peakTriangles": 488468,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 3,
-          "p95ms": 694.9,
+          "dpr": 0.836,
+          "canvasPixels": 595602,
+          "calls": 43,
+          "triangles": 424498,
+          "peakCalls": 43,
+          "peakTriangles": 424498,
+          "programs": 6,
+          "geometries": 42,
+          "textures": 23,
+          "fpsCloud": 5,
+          "p95ms": 587.1,
           "jsHeapMb": 30,
           "frames": 150
         },
-        "desert": {
+        "tropics": {
           "tier": "medium",
-          "dpr": 0.921,
-          "canvasPixels": 723350,
-          "calls": 41,
-          "triangles": 488468,
-          "peakCalls": 41,
-          "peakTriangles": 488468,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
+          "dpr": 0.836,
+          "canvasPixels": 595602,
+          "calls": 43,
+          "triangles": 342086,
+          "peakCalls": 43,
+          "peakTriangles": 424498,
+          "programs": 6,
+          "geometries": 43,
+          "textures": 23,
           "fpsCloud": 3,
-          "p95ms": 637.8,
+          "p95ms": 618,
           "jsHeapMb": 30,
           "frames": 180
+        },
+        "desert": {
+          "tier": "medium",
+          "dpr": 0.836,
+          "canvasPixels": 595602,
+          "calls": 29,
+          "triangles": 273436,
+          "peakCalls": 43,
+          "peakTriangles": 424498,
+          "programs": 6,
+          "geometries": 43,
+          "textures": 23,
+          "fpsCloud": 2,
+          "p95ms": 1206.1,
+          "jsHeapMb": 30,
+          "frames": 240
         },
         "reef": {
           "tier": "medium",
           "dpr": 0.836,
           "canvasPixels": 595602,
-          "calls": 25,
-          "triangles": 303669,
-          "peakCalls": 41,
-          "peakTriangles": 488468,
-          "programs": 5,
-          "geometries": 41,
-          "textures": 2,
-          "fpsCloud": 3,
-          "p95ms": 717.7,
+          "calls": 22,
+          "triangles": 192474,
+          "peakCalls": 43,
+          "peakTriangles": 424498,
+          "programs": 6,
+          "geometries": 43,
+          "textures": 23,
+          "fpsCloud": 2,
+          "p95ms": 1200.3,
           "jsHeapMb": 30,
-          "frames": 240
+          "frames": 270
         }
       },
       "parts": {
@@ -287,13 +293,13 @@
           "programs": 1
         },
         "ocean": {
-          "draws": 1,
-          "triangles": 30250,
+          "draws": 2,
+          "triangles": 12606,
           "programs": 1
         },
         "temperate": {
           "draws": 8,
-          "triangles": 102724,
+          "triangles": 99276,
           "programs": 1,
           "counts": {
             "pine": 240,
@@ -304,36 +310,41 @@
         },
         "tropical": {
           "draws": 11,
-          "triangles": 63963,
+          "triangles": 78916,
           "programs": 2
         },
         "GroundCover.js": {
-          "draws": 6,
-          "triangles": 155380,
+          "draws": 7,
+          "triangles": 155700,
           "programs": 1,
           "budget": 160000,
           "detail": {
-            "tallSeg": 2,
-            "fronds": 8
+            "fronds": 10,
+            "textureSize": 1024,
+            "cull": {
+              "grass": 70,
+              "flowers": 50,
+              "ferns": 95
+            }
           },
           "counts": {
-            "grass-tall": 3000,
-            "grass-fluffy": 4200,
-            "fern": 450,
-            "flower-stem": 3800,
-            "flower-star": 2510,
-            "flower-ball": 1290,
-            "grassBlades": 30000
+            "grass-curly": 2580,
+            "grass-fluffy": 2148,
+            "grass-dry": 272,
+            "grass-long": 500,
+            "flowers-warm": 572,
+            "flowers-cool": 378,
+            "fern": 450
           }
         },
         "terrain": {
-          "draws": 4,
-          "triangles": 80529,
+          "draws": 5,
+          "triangles": 80154,
           "programs": 2
         },
         "Reef.js": {
           "draws": 10,
-          "triangles": 55610,
+          "triangles": 56728,
           "programs": 2,
           "tier": "medium",
           "counts": {
@@ -345,14 +356,15 @@
             "sponge": 46,
             "bommie": 46,
             "critters": 69,
-            "seagrass": 1350,
+            "seagrass": 675,
             "fish": 110
           }
         }
       },
       "errors": [],
       "logs": [
-        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+        "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "warning: Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
       ]
     }
   },
@@ -364,7 +376,7 @@
         "pass": true
       },
       "triangles": {
-        "value": 243131,
+        "value": 202004,
         "target": 250000,
         "pass": true
       },
@@ -374,7 +386,7 @@
         "pass": true
       },
       "programs": {
-        "value": 5,
+        "value": 6,
         "target": 60,
         "pass": true
       },
@@ -385,22 +397,22 @@
     },
     "laptop": {
       "drawCalls": {
-        "value": 41,
+        "value": 43,
         "target": 250,
         "pass": true
       },
       "triangles": {
-        "value": 488468,
+        "value": 424498,
         "target": 500000,
         "pass": true
       },
       "canvasPixels": {
-        "value": 723350,
+        "value": 595602,
         "target": 853750,
         "pass": true
       },
       "programs": {
-        "value": 5,
+        "value": 6,
         "target": 80,
         "pass": true
       },

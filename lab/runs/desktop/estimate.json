@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x4 (not calibrated)",
   "fps": {
-    "best": 46.4,
-    "likely": 15.3,
-    "worst": 4.6,
+    "best": 60,
+    "likely": 21.8,
+    "worst": 5.8,
     "capHz": 60
   },
   "frameMs": {
-    "best": 21.6,
-    "likely": 65.4,
-    "worst": 215.6,
+    "best": 15.2,
+    "likely": 45.9,
+    "worst": 171.2,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 9.8,
-    "gpuMsPerFrame": 65.4,
+    "cpuMsPerFrame": 16.7,
+    "gpuMsPerFrame": 45.9,
     "gpuParts": {
-      "drawsMs": 1.23,
-      "trianglesMs": 2.44,
-      "shadingMs": 61.69,
+      "drawsMs": 1.11,
+      "trianglesMs": 1.64,
+      "shadingMs": 43.17,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 45,
-    "windowSec": 19.2,
-    "cloudFps": 2.3,
-    "drawsPerFrame": 41,
-    "trisPerFrame": 488468,
+    "frames": 72,
+    "windowSec": 18.5,
+    "cloudFps": 3.9,
+    "drawsPerFrame": 37,
+    "trisPerFrame": 327692,
     "canvasPixels": 723350,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 15.42,
-    "shadingCostPerPixel": 21.32,
-    "cloudGpuMsPerFrame": 1352,
-    "cloudMainMsPerFrame": 9.9
+    "shadingRefMpPerFrame": 10.79,
+    "shadingCostPerPixel": 14.92,
+    "cloudGpuMsPerFrame": 811.7,
+    "cloudMainMsPerFrame": 16.3
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
     "host": "runnervm0hi8g",
     "coefficients": {
-      "msPerRefMP": 78.0821,
-      "msPerMTri": 300,
-      "msPerDraw": 0.0281,
-      "msPerUploadMB": 0.4688
+      "msPerRefMP": 67.0552,
+      "msPerMTri": 265.625,
+      "msPerDraw": 0.0242,
+      "msPerUploadMB": 0.4297
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "desktop",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/desktop",
-  "at": "2026-11-22T10:57:56.018Z"
+  "at": "2026-11-22T11:18:20.612Z"
 }
