@@ -1,0 +1,81 @@
+name: lab
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['lab/latest/**', 'lab/runs/**']
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lab
+  cancel-in-progress: false
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://cozy-isle.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Wait until this commit is live
+        if: github.event_name == 'push'
+        run: |
+          for i in $(seq 1 48); do
+            v=$(curl -fsS "$SITE_URL/version.txt" 2>/dev/null || true)
+            if [ "$v" = "$GITHUB_SHA" ]; then echo "live after $((i*15))s"; exit 0; fi
+            sleep 15
+          done
+          echo "deploy of $GITHUB_SHA not seen; testing what is live"
+
+      - name: Install Playwright Chromium
+        run: |
+          cd lab
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Screenshots and exact counts (SwiftShader)
+        continue-on-error: true
+        run: node lab/shoot.mjs
+
+      - name: shade-device-lab (phone + laptop, estimated device FPS)
+        continue-on-error: true
+        timeout-minutes: 15
+        run: |
+          git clone --depth 1 https://github.com/shifatmasud/shade-device-lab.git /tmp/dl
+          cd /tmp/dl
+          bash scripts/setup.sh
+          for dev in phone desktop; do
+            rm -rf "$GITHUB_WORKSPACE/lab/runs/$dev"
+            node scripts/profile.mjs --url "$SITE_URL/?lab=1" --device $dev \
+              --actions "$GITHUB_WORKSPACE/lab/actions-$dev.json" --hold 20 \
+              --out "$GITHUB_WORKSPACE/lab/runs/$dev" || echo "profile $dev failed"
+            node scripts/estimate.mjs --run "$GITHUB_WORKSPACE/lab/runs/$dev" || echo "estimate $dev failed"
+          done
+
+      - name: Commit lab results
+        run: |
+          find lab/runs -name 'trace.json' -delete 2>/dev/null || true
+          find lab/runs -name '*.cpuprofile' -delete 2>/dev/null || true
+          find lab/runs -name 'frames.json' -delete 2>/dev/null || true
+          git config user.name "cozy-isle-lab"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A lab/latest lab/runs
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "lab: shots and counts (${GITHUB_EVENT_NAME}) for ${GITHUB_SHA::7}"
+          for i in 1 2 3 4; do
+            git pull --rebase -X theirs origin main && git push && exit 0
+            sleep 6
+          done
+          exit 1
