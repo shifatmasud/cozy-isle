@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x4 (not calibrated)",
   "fps": {
-    "best": 50.2,
-    "likely": 16.6,
-    "worst": 5.1,
+    "best": 60,
+    "likely": 24.6,
+    "worst": 6.3,
     "capHz": 60
   },
   "frameMs": {
-    "best": 19.9,
-    "likely": 60.4,
-    "worst": 195.8,
+    "best": 13.4,
+    "likely": 40.6,
+    "worst": 158.1,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 7.3,
-    "gpuMsPerFrame": 60.4,
+    "cpuMsPerFrame": 18.1,
+    "gpuMsPerFrame": 40.6,
     "gpuParts": {
-      "drawsMs": 1.11,
-      "trianglesMs": 1.64,
-      "shadingMs": 57.64,
+      "drawsMs": 1.2,
+      "trianglesMs": 1.7,
+      "shadingMs": 37.74,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 33,
-    "windowSec": 18.3,
-    "cloudFps": 1.8,
-    "drawsPerFrame": 37,
-    "trisPerFrame": 327692,
+    "frames": 63,
+    "windowSec": 19.2,
+    "cloudFps": 3.3,
+    "drawsPerFrame": 40,
+    "trisPerFrame": 339228,
     "canvasPixels": 723350,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 14.41,
-    "shadingCostPerPixel": 19.92,
-    "cloudGpuMsPerFrame": 1740.9,
-    "cloudMainMsPerFrame": 8.8
+    "shadingRefMpPerFrame": 9.43,
+    "shadingCostPerPixel": 13.04,
+    "cloudGpuMsPerFrame": 981.6,
+    "cloudMainMsPerFrame": 16.4
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-    "host": "runnervm0hi8g",
+    "host": "ip-10-0-129-163",
     "coefficients": {
-      "msPerRefMP": 110.8646,
-      "msPerMTri": 434.375,
-      "msPerDraw": 0.0281,
-      "msPerUploadMB": 0.6836
+      "msPerRefMP": 88.8109,
+      "msPerMTri": 418.75,
+      "msPerDraw": 0.0406,
+      "msPerUploadMB": 0.3711
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "desktop",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/desktop",
-  "at": "2026-11-24T05:40:55.705Z"
+  "at": "2026-11-24T06:13:11.599Z"
 }

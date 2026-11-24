@@ -6,24 +6,24 @@
   "cpuSource": "fallback CPU slowdown x6 (not calibrated)",
   "fps": {
     "best": 60,
-    "likely": 33,
-    "worst": 8.9,
+    "likely": 49.5,
+    "worst": 13.5,
     "capHz": 60
   },
   "frameMs": {
-    "best": 10,
-    "likely": 30.3,
-    "worst": 112.3,
+    "best": 6.7,
+    "likely": 20.2,
+    "worst": 74.1,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 10.6,
-    "gpuMsPerFrame": 30.3,
+    "cpuMsPerFrame": 6.8,
+    "gpuMsPerFrame": 20.2,
     "gpuParts": {
-      "drawsMs": 2.22,
-      "trianglesMs": 0.99,
-      "shadingMs": 27.13,
+      "drawsMs": 2.4,
+      "trianglesMs": 1.02,
+      "shadingMs": 16.77,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 103,
-    "windowSec": 19.4,
-    "cloudFps": 5.3,
-    "drawsPerFrame": 37,
-    "trisPerFrame": 164798,
+    "frames": 183,
+    "windowSec": 19.3,
+    "cloudFps": 9.5,
+    "drawsPerFrame": 40,
+    "trisPerFrame": 170734,
     "canvasPixels": 229792,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 4.68,
-    "shadingCostPerPixel": 20.36,
-    "cloudGpuMsPerFrame": 591.3,
-    "cloudMainMsPerFrame": 12.6
+    "shadingRefMpPerFrame": 2.89,
+    "shadingCostPerPixel": 12.58,
+    "cloudGpuMsPerFrame": 329.8,
+    "cloudMainMsPerFrame": 6.7
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-    "host": "runnervm0hi8g",
+    "host": "ip-10-0-129-163",
     "coefficients": {
-      "msPerRefMP": 110.8646,
-      "msPerMTri": 434.375,
-      "msPerDraw": 0.0281,
-      "msPerUploadMB": 0.6836
+      "msPerRefMP": 88.8109,
+      "msPerMTri": 418.75,
+      "msPerDraw": 0.0406,
+      "msPerUploadMB": 0.3711
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "phone",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/phone",
-  "at": "2026-11-24T05:39:45.714Z"
+  "at": "2026-11-24T06:12:15.648Z"
 }
