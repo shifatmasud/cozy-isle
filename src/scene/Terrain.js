@@ -1,5 +1,6 @@
 // Island terrain + instanced rocks (mossy boulders, bare boulders, desert mesa faces, grey cliff chunks).
-// Terrain: one mesh with vertex colours that follow biome, height and slope, plus a painted gouache detail map
+// Terrain: one mesh with vertex colours that follow biome, height and slope (including the snowy mountain
+// cap above ~34 m) plus a painted gouache detail map
 // (grass tufts / sand ripples / rock strata) applied per pixel near the camera, faded out with distance.
 // Wet-sand and caustic work only runs in the waterline band and the shallows; the deep seabed skips both.
 // Rocks: smooth lathe-built shapes (smooth + partly spherified normals, low-frequency lumps) painted with
@@ -212,6 +213,31 @@ function mossRegion(ctx, S, rand, depth, y0, y1, density = 1) {
 function wdx(S, a, b) {
   const d = Math.abs(a - b) % S;
   return Math.min(d, S - d);
+}
+// Snow mantle: same region idea as mossRegion but in whites with cool blue shade, so snowy crags read as
+// wind-packed drifts with dark rock showing through the scoured edge. Reference: Sierra Nevada granite
+// snow patches, https://www.americansouthwest.california/… (broad look) — bright caps, cool shade lips.
+function snowRegion(ctx, S, rand, depth, y0, y1, density = 1) {
+  const layers = [
+    { n: 700, min: -0.2, max: 0, col: '#6a7594', r: [1.5, 3], top: 0 },
+    { n: 1500, min: 0, col: '#e9eef8', r: [5, 10], top: 0 },
+    { n: 1700, min: 0.18, col: '#f2f6fd', r: [4, 8], top: 0.1, dy: -1.5 },
+    { n: 1600, min: 0.32, col: '#ffffff', r: [2.6, 5.5], top: 0.3, dy: -2 },
+    { n: 420, min: 0.5, col: '#ffffff', r: [1.2, 2.6], top: 0.5, dy: -3 },
+  ];
+  for (const L of layers) {
+    const n = Math.round(L.n * density);
+    for (let i = 0; i < n; i++) {
+      const x = rand() * S;
+      const y = y0 + rand() * (y1 - y0);
+      const d = depth(x, y);
+      if (d <= L.min || (L.max !== undefined && d > L.max)) continue;
+      const lightBias = 1 - Math.min(1, Math.max(0, y / S));
+      if (rand() > 1 - L.top + L.top * lightBias) continue;
+      const r = L.r[0] + rand() * (L.r[1] - L.r[0]);
+      wrapAt(S, x, y, r + 1, false, (ax) => spot(ctx, ax, y + (L.dy || 0), r, L.col, 0.95));
+    }
+  }
 }
 // Moss cap depth function: ragged lower edge plus a few tongues running down cracks.
 function mossCap(S, rand, base, nT, tLen) {
@@ -566,7 +592,7 @@ function drawMesa(ctx, S, rand) {
 }
 
 // ---- Grey cliff chunk (north coast / mountain crags): irregular jointed blocks, moss mantle, wet cool foot ----
-function drawCliff(ctx, S, rand) {
+function drawCliff(ctx, S, rand, snowy = false) {
   ctx.fillStyle = '#8f8ba3';
   ctx.fillRect(0, 0, S, S);
   const stones = ['#a39eb3', '#928ea7', '#aca6b6', '#8a879f', '#b2abb7', '#9c97ab'];
@@ -655,13 +681,15 @@ function drawCliff(ctx, S, rand) {
   }
   for (let i = 0; i < 5; i++) crack(ctx, S, rand() * S, S * (0.22 + rand() * 0.45), S * (0.1 + rand() * 0.14), rand, '#4b4864', '#c9c2cc');
   for (let i = 0; i < 22; i++) lichen(ctx, S, rand() * S, S * (0.22 + rand() * 0.62), rand, ['#d7d6a4', '#e9e5cf', '#c6c08a']);
-  // Small moss cushions on a few ledges.
-  for (let r = 1; r < rows.length - 2; r++) {
-    if (rand() < 0.45) continue;
-    const row = rows[r];
-    const cx = rand() * S;
-    const w = 20 + rand() * 40;
-    mossRegion(ctx, S, rand, (x, yy) => Math.min((w - wdx(S, x, cx)) / 12, (yy - (row(x) - 9)) / 5, (row(x) + 3 - yy) / 4), row(cx) - 16, row(cx) + 6, 0.16);
+  // Small moss cushions on a few ledges (snowy crags stay clean).
+  if (!snowy) {
+    for (let r = 1; r < rows.length - 2; r++) {
+      if (rand() < 0.45) continue;
+      const row = rows[r];
+      const cx = rand() * S;
+      const w = 20 + rand() * 40;
+      mossRegion(ctx, S, rand, (x, yy) => Math.min((w - wdx(S, x, cx)) / 12, (yy - (row(x) - 9)) / 5, (row(x) + 3 - yy) / 4), row(cx) - 16, row(cx) + 6, 0.16);
+    }
   }
   // Wet, cool foot with pale tide specks.
   const g = ctx.createLinearGradient(0, S * 0.82, 0, S);
@@ -671,8 +699,9 @@ function drawCliff(ctx, S, rand) {
   ctx.fillStyle = g;
   ctx.fillRect(0, S * 0.82, S, S * 0.18);
   for (let i = 0; i < 240; i++) spot(ctx, rand() * S, S * (0.86 + rand() * 0.12), 0.8 + rand() * 1.5, '#d9dde0', 0.6);
-  // Moss mantle on top, spilling over the edge in tongues.
-  mossRegion(ctx, S, rand, mossCap(S, rand, 0.16, 8, 0.22), -6, S * 0.55);
+  // Moss mantle on top, spilling over the edge in tongues — or a snow drift on the snowy variant.
+  if (snowy) snowRegion(ctx, S, rand, mossCap(S, rand, 0.14, 9, 0.26), -6, S * 0.55);
+  else mossRegion(ctx, S, rand, mossCap(S, rand, 0.16, 8, 0.22), -6, S * 0.55);
 }
 // ==== TEXTURES END ====
 
@@ -707,6 +736,10 @@ const PAL = {
   seabed: C('#eedcaa'),
   lagoon: C('#e8e6b6'),
   deep: C('#4f8c8e'),
+  // Mountain snow: bright tops, cool blue-violet in the drifts, dirty grey-green where wind scours it off.
+  snow: C('#f6f8fc'),
+  snowShade: C('#bcc8e6'),
+  snowDirty: C('#c9cec4'),
 };
 
 function sectorW(ang, c, w) {
@@ -799,6 +832,21 @@ function terrainColor(b, x, z, out, mat) {
   else out.copy(PAL.seabed);
   out.multiplyScalar(0.95 + n2 * 0.1);
 
+  // Snow biome: high on the mountain, whiter with height, painted over whatever is underneath so the
+  // treeline fade comes free. Patchy: wind-scoured ridgelines and steep faces show rock and dirt through.
+  // The snowline climbs a little on the south flank of the peak (+z side), where the sun melts it lower.
+  const southFlank = smoothstep(-78, -44, z);
+  const snowH = hgt + (n1 - 0.5) * 9 + southFlank * 3.5;
+  const patch = smoothstep(0.3, 0.72, n2 * 0.6 + n1 * 0.4);
+  let snow = smoothstep(30, 38, snowH) * (0.4 + 0.6 * patch);
+  snow *= 1 - smoothstep(0.62, 0.9, slope) * 0.5;
+  if (snow > 0.003) {
+    // Drifts and steep lee faces lean cool blue-violet; scoured patches go dirty grey-green.
+    mix(tA, PAL.snow, PAL.snowShade, 0.14 + n3 * 0.32 + smoothstep(0.45, 0.85, slope) * 0.3);
+    tA.lerp(PAL.snowDirty, (1 - patch) * smoothstep(36, 46, snowH) * 0.45);
+    out.lerp(tA, snow);
+  }
+
   // Detail-map weights. Deep seabed gets none, so the shader skips its texture fetches there.
   let g = b.meadow + b.forest + b.tropical + dune * 0.6;
   let sd = b.beach + b.desert * (1 - steepD) + b.under * smoothstep(-7, -1.5, hgt);
@@ -808,6 +856,13 @@ function terrainColor(b, x, z, out, mat) {
     g /= sum;
     sd /= sum;
     rk /= sum;
+  }
+  // Snowed ground reads cleaner: fade the gouache detail out where the snow takes over.
+  if (snow > 0.003) {
+    const damp = 1 - snow * 0.8;
+    g *= damp;
+    sd *= damp;
+    rk *= damp;
   }
   mat[0] = g;
   mat[1] = sd;
@@ -1122,7 +1177,10 @@ export function cliffArrays() {
 function cliffGeometry() {
   const g = latheGeometry(cliffArrays(), { sph: 0.3, center: new THREE.Vector3(0, 0.4, 0) });
   recolor(g, (x, y, z, nx, ny, nz, col) => {
-    const v = 0.94 + valueNoise(x * 1.8 + 7, z * 1.8 - 3 + y, 72) * 0.12;
+    // Snow caps read top-down: up-facing vertices carry more of the instance tint (snow), sheer sides
+    // less of it (grey rock). Works for coast cliffs too - light tops, cooler shaded sides.
+    const topW = Math.max(0, ny) ** 1.5;
+    const v = 0.84 + topW * 0.3 + valueNoise(x * 1.8 + 7, z * 1.8 - 3 + y, 72) * 0.12;
     col.setRGB(v, v, v);
   });
   return g;
@@ -1175,6 +1233,7 @@ export function placeBoulders(N, kind = 'moss', orientFn = orient) {
     accept: (b, x, z) => {
       if (b.under > 0.25 || b.h < -0.2 || b.rock > 0.55 || b.slope > 0.5) return 0;
       const patch = smoothstep(0.45, 0.68, clump(x, z, 0.045, moss ? 11 : 12));
+      if (moss && b.h > 26) return 0; // no mossy boulders up in the snow
       const w = moss ? b.meadow * 0.6 + b.forest * 0.55 : b.beach * 0.9 + b.desert * 0.35 + b.tropical * 0.3;
       return w * (0.08 + 0.92 * patch);
     },
@@ -1285,6 +1344,16 @@ export function placeCliffs(N, orientFn = orient) {
     const mountain = p.b.h > 24;
     const stack = p.b.h < 0.2;
     const s = mountain ? 2.8 + rand() * 3.6 : 2.0 + rand() * 2.6;
+    // Mountain crags above the snowline cap themselves: patchy, so wind-scoured blocks stay bare rock,
+    // and steep slopes hold less snow. tint stays 'crag'; tintColor() lerps toward snow by it.snow.
+    let snow = 0;
+    if (mountain) {
+      const scour = valueNoise(p.x * 0.06, p.z * 0.06, 91);
+      snow = smoothstep(33, 40, p.b.h + (scour - 0.5) * 9);
+      snow *= 1 - smoothstep(0.45, 0.8, p.b.slope) * 0.5;
+    }
+    // Any crag high enough to touch the snowline gets the snow-capped texture; the rest stay mossy.
+    if (mountain && p.b.h > 36) snow = Math.max(snow, 1 - smoothstep(36, 44, p.b.h));
     const it = {
       x: p.x, z: p.z,
       y: p.b.h - s * (stack ? 0.1 : 0.3),
@@ -1293,6 +1362,7 @@ export function placeCliffs(N, orientFn = orient) {
       sy: stack ? 1.4 + rand() * 0.6 : 0.8 + rand() * 0.6,
       sz: 0.8 + rand() * 0.4,
       tint: mountain ? 'crag' : 'coast',
+      snow,
       j: rand(),
     };
     out.push(orientFn(it, nrm, Math.atan2(nrm[0], nrm[2]) + (rand() - 0.5) * 0.8, 0.25, 0.1, rand));
@@ -1315,7 +1385,17 @@ const TINTS = {
 const _col = new THREE.Color();
 function tintColor(it) {
   const t = TINTS[it.tint] || TINTS.meadow;
-  _col.setRGB(t[0], t[1], t[2]);
+  let r = t[0];
+  let g = t[1];
+  let b = t[2];
+  // Snow-capped mountain crags: lift the whole rock toward a bright cool white; combined with the
+  // cliff geometry's brighter top vertices and darker sheer sides, tops read as snow, sides as rock.
+  if (it.snow > 0) {
+    r += (1.5 - r) * it.snow;
+    g += (1.56 - g) * it.snow;
+    b += (1.7 - b) * it.snow;
+  }
+  _col.setRGB(r, g, b);
   const j = it.j;
   _col.offsetHSL((j - 0.5) * 0.04, 0, 0);
   _col.multiplyScalar(0.92 + ((j * 7.31) % 1) * 0.16);
@@ -1334,7 +1414,8 @@ function buildRocks(counts) {
     { name: 'mossRocks', geo: boulder, mat: rockMaterial('rockMoss', drawBoulderMoss, 311, { wrap: 0.5, rim: 0.12, aoScale: 0.45 }), items: placeBoulders(counts.mossRocks, 'moss') },
     { name: 'bareRocks', geo: boulder, mat: rockMaterial('rockBare', drawBoulderBare, 312, { wrap: 0.5, rim: 0.12, aoScale: 0.45 }), items: placeBoulders(counts.bareRocks, 'bare') },
     { name: 'mesaRocks', geo: mesaGeometry(), mat: rockMaterial('rockMesa', drawMesa, 313, { wrap: 0.4, rim: 0.08, aoScale: 0.5 }), items: placeMesas(counts.mesaRocks) },
-    { name: 'cliffRocks', geo: cliffGeometry(), mat: rockMaterial('rockCliff', drawCliff, 314, { wrap: 0.4, rim: 0.1, aoScale: 0.4 }), items: placeCliffs(counts.cliffRocks) },
+    { name: 'cliffSnowRocks', geo: cliffGeometry(), mat: rockMaterial('rockCliffSnow', (ctx, S, rand) => drawCliff(ctx, S, rand, true), 315, { wrap: 0.4, rim: 0.12, aoScale: 0.35 }), items: placeCliffs(counts.cliffRocks).filter((it) => it.snow > 0.25) },
+    { name: 'cliffRocks', geo: cliffGeometry(), mat: rockMaterial('rockCliff', drawCliff, 314, { wrap: 0.4, rim: 0.1, aoScale: 0.4 }), items: placeCliffs(counts.cliffRocks).filter((it) => !(it.snow > 0.25)) },
   ];
   let tris = 0;
   let draws = 0;

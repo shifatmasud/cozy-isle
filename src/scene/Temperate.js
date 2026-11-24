@@ -1149,12 +1149,12 @@ function landOK(b, beachMax, tropMax) {
 }
 
 function pineAccept(b, x, z) {
-  if (!landOK(b, 0.2, 0.35) || b.h > 46) return 0;
+  if (!landOK(b, 0.2, 0.35) || b.h > 32) return 0; // treeline: pines stop where the snow starts
   const f = smoothstep(0.08, 0.28, b.forest);
   const alt = smoothstep(9, 14, b.h) * smoothstep(10, -30, z) * (1 - b.desert);
   const grove = smoothstep(0.33, 0.43, clump(x, z, 0.03, 11)); // clearings where the clump noise is low
   const steep = smoothstep(0.7, 0.5, b.slope);
-  const tree = smoothstep(46, 38, b.h);
+  const tree = smoothstep(32, 27, b.h);
   return Math.min(1, Math.max(f, alt * 0.8)) * grove * steep * tree;
 }
 function oakEdgeAccept(b, x, z) {
@@ -1184,7 +1184,7 @@ function birchAccept(b, x, z) {
   return Math.max(edge, glade) * copse * smoothstep(0.7, 0.5, b.slope);
 }
 function bushAccept(b, x, z) {
-  if (!(b.h > 1.1 && b.under < 0.01 && b.slope < 0.7 && b.rock < 0.45 && b.desert < 0.3 && b.beach < 0.5)) return 0;
+  if (!(b.h > 1.1 && b.h < 28 && b.under < 0.01 && b.slope < 0.7 && b.rock < 0.45 && b.desert < 0.3 && b.beach < 0.5)) return 0;
   const f = b.forest;
   const edge = smoothstep(0.02, 0.1, f) * smoothstep(0.45, 0.2, f);
   const under = 0.35 * smoothstep(0.15, 0.3, f);

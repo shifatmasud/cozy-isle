@@ -2,9 +2,12 @@
 // Staghorn thickets, brain-coral domes, table corals on stalks, purple sea fans facing the current,
 // bubble anemones, tube sponges, coral-crusted rock bommies with soft-coral fingers,
 // starfish / urchin / shell scatters on the sand, swaying turtle-grass meadows with sand halos
-// round each patch reef, and small schools of reef fish swimming slow loops.
-// 10 draw calls: painted-skin corals, fans, anemones, seagrass and fish through the shared leafMaterial program,
-// sand critters through cozyMaterial (no new shader programs). Hidden when the camera is > ~150 m away.
+// round each patch reef, small schools of reef fish swimming slow loops, and forests of giant kelp
+// (Macrocystis pyrifera) on the deeper fore-reef slope: knobbly holdfasts, rope-like swaying stipes
+// and golden translucent blade crowns with pneumatocyst bulbs, clustered into stands by clump().
+// 12 draw calls: painted-skin corals, fans, anemones, seagrass, kelp blades and fish through the shared
+// leafMaterial program, kelp stipes/holdfasts and sand critters through cozyMaterial (no new programs).
+// Hidden when the camera is > ~150 m away.
 // Note: island.js zeroes `tropical` wherever `under` is 1, so the reef uses its own sector mask
 // on BIOME_ANGLE.tropical plus the field's `d` (coast distance) to find the lagoon, crest and fore reef.
 import { createElement as h, useMemo, useEffect, useRef } from 'react';
@@ -85,6 +88,7 @@ export const SPECIES = {
 };
 export const CRITTER_SHARE = 0.15; // starfish + urchin + shells scatters, also a fraction of Q.coral
 export const SEAGRASS_TUFTS = 0.15; // painted cards of 7 ribbon blades (2 crossed bent cards) per Q.seagrass
+export const KELP_TREES = 0.24; // giant kelp trees (holdfast + stipe + blade crown) per Q.coral
 
 // Fish species for the schools: colour, body scale, typical group size.
 export const FISH_SPECIES = [
@@ -100,6 +104,7 @@ export function reefCounts(Q) {
   for (const k of Object.keys(SPECIES)) c[k] = Math.max(0, Math.round(Q.coral * SPECIES[k].share));
   c.critters = Math.max(0, Math.round(Q.coral * CRITTER_SHARE));
   c.seagrass = Math.max(0, Math.round(Q.seagrass * SEAGRASS_TUFTS));
+  c.kelp = Math.max(0, Math.round(Q.coral * KELP_TREES));
   c.fish = Math.max(0, Q.fish | 0);
   return c;
 }
@@ -294,6 +299,51 @@ function placeCritters(n, meadows, patches, tops) {
   return out;
 }
 
+// Giant kelp (Macrocystis pyrifera) forests: densest on the deeper fore-reef slope (d > ~1.3),
+// where the sea floor sits at about -4..-9 m and a 4.5-9 m stipe can rise toward the surface while
+// the blade crown still stays under CEILING. clump() gathers the trees into stands, like real kelp forests.
+function placeKelp(n, tops) {
+  const out = [];
+  if (n <= 0) return out;
+  const crown = Math.max(tops.kelpBase, tops.kelpBlades);
+  const found = scatter({
+    count: n,
+    seed: 6502,
+    tries: 900,
+    bounds: 200,
+    accept: (b, x, z) => {
+      // Kelp's own band, wider than reefOK: real Macrocystis grows below the -9 m coral limit,
+      // down to about -11 m. Shallower trees just grow shorter (their scale is clamped to the
+      // room under CEILING), so the band reaches up the lagoon slope edge.
+      if (b.under < 0.5 || b.h < -11 || b.h > -4.4 || b.d < 1.28 || b.d > 1.424) return 0;
+      const w = sectorW(x, z) * bandW(b.d, 1.3, 1.4, 0.02) * focusW(x, z);
+      return w * (0.15 + 0.85 * smoothstep(0.3, 0.62, clump(x, z, 0.05, 63)));
+    },
+  });
+  const rand = mulberry32(6503);
+  for (const p of found) {
+    const b = p.b;
+    const room = (CEILING - b.h) / crown;
+    if (room < 3.4) continue;
+    // Taller in deeper water; shallower trees stop short of the ceiling.
+    const s = Math.min(lerp(4.5, 9, Math.pow(rand(), 1.3)), room);
+    out.push({
+      x: p.x,
+      y: b.h - 0.03 * s, // holdfast base gripped slightly into the rock/sand
+      z: p.z,
+      r: rand() * TAU,
+      tx: (rand() - 0.5) * 0.09,
+      tz: (rand() - 0.5) * 0.09,
+      s,
+      sx: 0.9 + rand() * 0.2,
+      sy: 0.95 + rand() * 0.1,
+      sz: 0.9 + rand() * 0.2,
+      c: jitter(rand, Math.floor(rand() * 4)),
+    });
+  }
+  return out;
+}
+
 function planSchools(total, patches) {
   const rand = mulberry32(6401);
   const schools = [];
@@ -365,6 +415,7 @@ export function planReef(Q, tops) {
   const meadows = placeMeadows(Math.max(6, Math.round(counts.seagrass / 22)));
   items.seagrass = placeSeagrass(counts.seagrass, meadows, patches, tops);
   items.critters = placeCritters(counts.critters, meadows, patches, tops);
+  items.kelp = placeKelp(counts.kelp, tops);
   const schools = planSchools(counts.fish, patches);
   return { counts, patches, meadows, items, schools };
 }
@@ -535,6 +586,57 @@ function drawSeagrass(ctx, S, rand) {
       brush.dab(ctx, p[0] + (rand() - 0.5) * w * 0.6, p[1], w * 0.18, hsl(45, 60, 85), 0.7);
     }
   }
+}
+
+// Giant-kelp blade card (alpha): one golden-brown serrated lanceolate blade rising from a small
+// pneumatocyst gas bladder at its base, pale midrib, sunlit upper edge, cool violet near the base.
+function drawKelp(ctx, S, rand) {
+  const cx = S * (0.44 + rand() * 0.12);
+  const lean = (rand() - 0.5) * S * 0.3;
+  const w = S * (0.11 + rand() * 0.04);
+  const hue = 32 + rand() * 10;
+  const pts = [];
+  for (let k = 0; k <= 16; k++) {
+    const t = k / 16;
+    pts.push([cx + lean * t * t + Math.sin(t * 4 + 1.3) * S * 0.028, S * 0.92 - (S * 0.88) * t]);
+  }
+  // blade body: serrated edges, translucent golden-brown with lighter sunlit streaks
+  ctx.beginPath();
+  for (let k = 0; k <= 16; k++) {
+    const t = k / 16;
+    const ww = w * (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, t * 1.15))) * (0.82 + 0.36 * ((k % 2) * 0.5 + t * 0.4));
+    const [x, y] = pts[k];
+    k ? ctx.lineTo(x - ww, y) : ctx.moveTo(x - ww, y);
+  }
+  for (let k = 16; k >= 0; k--) {
+    const t = k / 16;
+    const ww = w * (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, t * 1.15))) * (0.82 + 0.36 * ((k % 2) * 0.5 + t * 0.4));
+    const [x, y] = pts[k];
+    ctx.lineTo(x + ww, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = hsl(hue, 52, 46);
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  for (let i = 0; i < 30; i++) brush.dab(ctx, cx + (rand() - 0.5) * w * 1.6, S * (0.15 + rand() * 0.8), S * 0.045, hsl(hue + 8, 65, 68), 0.4);
+  const g = ctx.createLinearGradient(0, 0, 0, S);
+  g.addColorStop(0, 'rgba(255,238,190,0.5)');
+  g.addColorStop(0.55, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(60,70,130,0.4)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  ctx.restore();
+  // midrib
+  ctx.lineWidth = Math.max(1, w * 0.1);
+  ctx.strokeStyle = hsl(45, 65, 84, 0.7);
+  ctx.beginPath();
+  pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.stroke();
+  // pneumatocyst bulb at the blade base
+  brush.dab(ctx, pts[0][0], pts[0][1] + S * 0.015, S * 0.055, hsl(36, 50, 58), 1);
+  brush.dab(ctx, pts[0][0] - S * 0.015, pts[0][1] - S * 0.015, S * 0.018, hsl(45, 75, 88), 0.9);
+  brush.dab(ctx, pts[0][0], pts[0][1] + S * 0.04, S * 0.02, hsl(260, 30, 30), 0.5);
 }
 
 // Fish body, for a sphere stretched along x (nose = top of canvas, back = left/right edges,
@@ -948,6 +1050,63 @@ function seagrassGeo() {
   return merge(parts);
 }
 
+// Giant kelp base (cozyMaterial, no map): a knobbly darker holdfast gripping the rock plus the flexible
+// rope-like stipe, a smooth tapering tube with a gentle S-curve, rising ~1 unit (scaled 4.5-9 m).
+// Holdfast 20 + stipe 6x4 = 68 triangles. Sways gently with the shared current.
+function kelpBaseGeo() {
+  const rand = mulberry32(91);
+  const hold = new THREE.IcosahedronGeometry(0.13, 0);
+  displace(hold, (x, y, z) => {
+    const k = 0.75 + 0.5 * n3(x * 9 + 5, y * 9, z * 9, 92);
+    return [x * k * 1.35, Math.max(0.05, y * k * 0.75) + 0.03, z * k * 1.35];
+  });
+  hold.computeVertexNormals();
+  const hf = paint(hold, '#5e4a32');
+  shade(hf, (x, y, z, r, g, b) => {
+    const v = 0.7 + 0.3 * smoothstep(0.0, 0.16, y);
+    return [r * v, g * v * 1.05, b * v * 0.9];
+  });
+  spherifyNormals(hf, V3(0, 0.05, 0), 0.7);
+  const H = 1.0;
+  const stipe = new THREE.CylinderGeometry(0.02, 0.036, H, 6, 4, true);
+  displace(stipe, (x, y, z) => {
+    const t = y + H / 2;
+    const sway = Math.sin(t * 3.1) * 0.05 + Math.sin(t * 5.3 + 1.2) * 0.025;
+    return [x + sway, t, z + sway * 0.6];
+  });
+  stipe.computeVertexNormals();
+  const st = paint(stipe, '#8a6a42');
+  rampY(st, 0, 1, 0.65, '#e8c27a', 0.78, 1.0, 0.4);
+  spherifyNormals(st, V3(0, 0.4, 0), 0.35);
+  return merge([hf, st]);
+}
+
+// Kelp blade crown: 8 lanceolate blade cards in two loose spirals around the upper stipe, each leaning
+// out and up with a gentle curl. 8 x 4 = 32 triangles, alpha-cut, double sided, sways with the current.
+function kelpBladesGeo() {
+  const rand = mulberry32(93);
+  const parts = [];
+  for (let j = 0; j < 11; j++) {
+    const t = 0.48 + (j / 10) * 0.48; // fraction up the stipe
+    const az = j * 2.4 + rand() * 0.6;
+    const g = new THREE.PlaneGeometry(0.2, 0.5, 1, 2);
+    displace(g, (x, y, z) => {
+      const v = y + 0.25; // 0..0.5 up the card
+      return [x, v, 0.42 * v * v]; // gentle outward curl
+    });
+    g.computeVertexNormals();
+    g.translate(0, 0.015, 0); // pneumatocyst sits just off the stipe
+    g.rotateX(0.55 + rand() * 0.5); // lean out from the stipe
+    g.rotateY(az);
+    g.translate(Math.cos(az) * 0.035, t, Math.sin(az) * 0.035);
+    const p = paintUV(g, '#ffffff');
+    rampY(p, 0, 0.9, 0.6);
+    spherifyNormals(p, V3(0, t - 0.1, 0), 0.5);
+    parts.push(p);
+  }
+  return merge(parts);
+}
+
 // Reef fish: a deep, laterally compressed smooth body (nose +x) with the painted bands, eyes and pale belly,
 // plus a forked tail sampling the painted fin strip. 64 + 4 = 68 triangles.
 function fishGeo() {
@@ -992,6 +1151,7 @@ const PALETTES = {
   bommie: ['#f4f0ff', '#fff4ec', '#eef6ff'],
   critters: ['#ffffff', '#fff2e6', '#f3f0ff'],
   seagrass: ['#ffffff', '#f4ffe0', '#e8fff2'],
+  kelp: ['#d9a75a', '#c9923f', '#b57f34', '#e2b46a'],
 };
 
 // Painted maps: key, draw, size, repeat. Sizes kept small for the phone (about 3.3 MB of texture in total).
@@ -1002,6 +1162,7 @@ const TEX = {
   anemone: ['reef-anemone', drawAnemone, 256, true],
   grass: ['reef-seagrass', drawSeagrass, 512, false],
   fish: ['reef-fish', drawFish, 256, false],
+  kelp: ['reef-kelp', drawKelp, 512, false],
 };
 
 function buildReef(Q) {
@@ -1018,6 +1179,8 @@ function buildReef(Q) {
     anemone: leafMaterial({ map: tex.anemone, wrap: 0.75, rim: 0.35, trans: 0.3, cut: 0.3, aoScale: 1.6, sway: 0.35, side: F }),
     grass: leafMaterial({ map: tex.grass, wrap: 0.85, rim: 0.3, trans: 0.45, cut: 0.5, aoScale: 0.5, sway: 0.16 }),
     fish: leafMaterial({ map: tex.fish, wrap: 0.6, rim: 0.45, trans: 0.1, cut: 0.3, aoScale: 0, side: F }),
+    kelpBase: cozyMaterial({ wrap: 0.6, rim: 0.25, aoScale: 0.9, sway: 0.05 }),
+    kelpBlade: leafMaterial({ map: tex.kelp, wrap: 0.8, rim: 0.4, trans: 0.55, cut: 0.45, aoScale: 0.5, sway: 0.13 }),
     critters: cozyMaterial({ wrap: 0.65, rim: 0.3, aoScale: 0.9 }),
   };
   // aoScale 0 leaves the shared AO at its 0.6 floor; lift the fish base tint so they stay bright.
@@ -1034,6 +1197,8 @@ function buildReef(Q) {
     critters: crittersGeo(),
     seagrass: seagrassGeo(),
     fish: fishGeo(),
+    kelpBase: kelpBaseGeo(),
+    kelpBlades: kelpBladesGeo(),
   };
   const tops = {};
   for (const k of Object.keys(geos)) {
@@ -1050,16 +1215,26 @@ function buildReef(Q) {
   };
 
   // Staghorn, table, sponge and bommie share one material (same map), but stay separate meshes (one per species).
-  const matFor = { staghorn: 'coral', brain: 'brain', table: 'coral', fan: 'fan', anemone: 'anemone', sponge: 'coral', bommie: 'coral', critters: 'critters', seagrass: 'grass' };
+  const matFor = { staghorn: 'coral', brain: 'brain', table: 'coral', fan: 'fan', anemone: 'anemone', sponge: 'coral', bommie: 'coral', critters: 'critters', seagrass: 'grass', kelp: 'kelpBase' };
+  const geoFor = { critters: 'critters', seagrass: 'seagrass', kelp: 'kelpBase' };
   const meshes = [];
   const parts = {};
   for (const k of Object.keys(matFor)) {
     const items = plan.items[k];
     parts[k] = items.length;
     if (!items.length) continue;
-    const mesh = makeInstanced(geos[k], mats[matFor[k]], items, colorOf(PALETTES[k]));
+    const mesh = makeInstanced(geos[geoFor[k] || k], mats[matFor[k]], items, colorOf(PALETTES[k]));
     mesh.name = 'reef-' + k;
     meshes.push(mesh);
+  }
+
+  // Kelp blade crown shares the kelp trees' transforms; one extra InstancedMesh (draw call 12 of 12).
+  const kelpItems = plan.items.kelp || [];
+  if (kelpItems.length) {
+    const blades = makeInstanced(geos.kelpBlades, mats.kelpBlade, kelpItems, colorOf(PALETTES.kelp));
+    blades.name = 'reef-kelp-blades';
+    meshes.push(blades);
+    parts.kelpBlades = kelpItems.length;
   }
 
   // Fish: one InstancedMesh, matrices rewritten each frame while the camera is near the reef.

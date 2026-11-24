@@ -11,6 +11,7 @@ const CAPTIONS = {
   tropics: 'Palms and bananas by the lagoon',
   desert: 'Warm mesas and cactus on the west coast',
   reef: 'Under the lagoon, among the coral',
+  kelp: 'Drift through a giant kelp forest',
 };
 
 const MESSAGES = ['Mixing the greens', 'Fluffing the clouds', 'Filling the lagoon', 'Planting the meadow', 'Warming up the sun'];
