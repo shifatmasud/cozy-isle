@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x4 (not calibrated)",
   "fps": {
-    "best": 50.4,
-    "likely": 16.6,
-    "worst": 5.1,
+    "best": 51.5,
+    "likely": 17,
+    "worst": 5.2,
     "capHz": 60
   },
   "frameMs": {
-    "best": 19.9,
-    "likely": 60.2,
-    "worst": 194.4,
+    "best": 19.4,
+    "likely": 58.9,
+    "worst": 191.8,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 6.9,
-    "gpuMsPerFrame": 60.2,
+    "cpuMsPerFrame": 7.6,
+    "gpuMsPerFrame": 58.9,
     "gpuParts": {
       "drawsMs": 1.2,
       "trianglesMs": 1.7,
-      "shadingMs": 57.28,
+      "shadingMs": 55.98,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 36,
-    "windowSec": 19.2,
+    "frames": 35,
+    "windowSec": 18.2,
     "cloudFps": 1.9,
     "drawsPerFrame": 40,
     "trisPerFrame": 339228,
     "canvasPixels": 723350,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 14.32,
-    "shadingCostPerPixel": 19.8,
-    "cloudGpuMsPerFrame": 1733.9,
-    "cloudMainMsPerFrame": 7.5
+    "shadingRefMpPerFrame": 14,
+    "shadingCostPerPixel": 19.35,
+    "cloudGpuMsPerFrame": 1687.4,
+    "cloudMainMsPerFrame": 8.2
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
     "host": "runnervm0hi8g",
     "coefficients": {
-      "msPerRefMP": 110.8646,
-      "msPerMTri": 428.125,
-      "msPerDraw": 0.0281,
-      "msPerUploadMB": 0.6055
+      "msPerRefMP": 110.2686,
+      "msPerMTri": 421.875,
+      "msPerDraw": 0.0273,
+      "msPerUploadMB": 0.5664
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "desktop",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/desktop",
-  "at": "2026-11-24T16:25:38.420Z"
+  "at": "2026-11-24T21:27:02.766Z"
 }
