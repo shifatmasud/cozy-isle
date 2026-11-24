@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 
 // version.txt lets the lab workflow wait until this exact commit is live.
+// GitHub Pages serves the site from /cozy-isle/; Vercel serves it from the root.
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/cozy-isle/' : '/',
   build: { target: 'es2020', sourcemap: false, chunkSizeWarningLimit: 1500 },
   plugins: [{
     name: 'version-file',
