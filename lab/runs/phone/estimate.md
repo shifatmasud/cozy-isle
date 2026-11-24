@@ -3,8 +3,8 @@
 **ESTIMATE, not measured on the device.** Estimated from a cloud run. Not measured on the device. Real FPS is only what the device itself shows.
 
 - Page: https://cozy-isle.vercel.app/?lab=1
-- Likely FPS: **49.5** (range 13.5 to 60, capped at 60 Hz)
-- Frame time: likely 20.2 ms (range 6.7 to 74.1 ms)
+- Likely FPS: **48.9** (range 13 to 60, capped at 60 Hz)
+- Frame time: likely 20.4 ms (range 6.7 to 76.8 ms)
 - Main limit: GPU
 - Confidence: low (spec-based guesses; use for comparing builds, not as a promise)
 - GPU costs from: spec-based guess (profile.gpuPrior)
@@ -12,17 +12,17 @@
 
 ## Where the device time goes (per frame, estimated)
 
-- CPU main thread: 6.8 ms
-- GPU total: 20.2 ms
-  - Shading pixels: 16.77 ms (2.89 reference megapixels, 12.58 per screen pixel)
+- CPU main thread: 7.7 ms
+- GPU total: 20.4 ms
+  - Shading pixels: 17.02 ms (2.93 reference megapixels, 12.77 per screen pixel)
   - Draw calls: 2.4 ms (40 per frame)
   - Triangles: 1.02 ms (170734 per frame)
   - Uploads: 0 ms (0 MB per frame)
 
 ## Measured in the cloud (inputs, exact counts)
 
-- Window: steady phase, 183 frames over 19.3 s (cloud FPS 9.5; SwiftShader, not comparable to the device)
-- Cloud GPU process time per frame: 329.8 ms; main thread per frame: 6.7 ms
+- Window: steady phase, 181 frames over 19.2 s (cloud FPS 9.4; SwiftShader, not comparable to the device)
+- Cloud GPU process time per frame: 332.7 ms; main thread per frame: 7.5 ms
 - Canvas: 229792 pixels
 - Cloud renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)
 
