@@ -5,25 +5,25 @@
   "gpuCostSource": "spec-based guess (profile.gpuPrior)",
   "cpuSource": "fallback CPU slowdown x4 (not calibrated)",
   "fps": {
-    "best": 51.5,
-    "likely": 17,
-    "worst": 5.2,
+    "best": 60,
+    "likely": 20.5,
+    "worst": 5.7,
     "capHz": 60
   },
   "frameMs": {
-    "best": 19.4,
-    "likely": 58.9,
-    "worst": 191.8,
+    "best": 16.1,
+    "likely": 48.8,
+    "worst": 176.2,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 7.6,
-    "gpuMsPerFrame": 58.9,
+    "cpuMsPerFrame": 14.9,
+    "gpuMsPerFrame": 48.8,
     "gpuParts": {
       "drawsMs": 1.2,
       "trianglesMs": 1.7,
-      "shadingMs": 55.98,
+      "shadingMs": 45.92,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -37,26 +37,26 @@
   },
   "workload": {
     "phase": "steady",
-    "frames": 35,
-    "windowSec": 18.2,
-    "cloudFps": 1.9,
+    "frames": 68,
+    "windowSec": 18.6,
+    "cloudFps": 3.6,
     "drawsPerFrame": 40,
     "trisPerFrame": 339228,
     "canvasPixels": 723350,
     "uploadMbPerFrame": 0,
-    "shadingRefMpPerFrame": 14,
-    "shadingCostPerPixel": 19.35,
-    "cloudGpuMsPerFrame": 1687.4,
-    "cloudMainMsPerFrame": 8.2
+    "shadingRefMpPerFrame": 11.48,
+    "shadingCostPerPixel": 15.87,
+    "cloudGpuMsPerFrame": 873.4,
+    "cloudMainMsPerFrame": 15.9
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
     "host": "runnervm0hi8g",
     "coefficients": {
-      "msPerRefMP": 110.2686,
-      "msPerMTri": 421.875,
-      "msPerDraw": 0.0273,
-      "msPerUploadMB": 0.5664
+      "msPerRefMP": 68.2473,
+      "msPerMTri": 262.5,
+      "msPerDraw": 0.0234,
+      "msPerUploadMB": 0.4102
     }
   },
   "deviceCoefficients": {
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "desktop",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/desktop",
-  "at": "2026-11-24T21:27:02.766Z"
+  "at": "2026-11-25T00:58:35.071Z"
 }
