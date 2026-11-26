@@ -1,9 +1,9 @@
 # Device run: Shifat's phone (Samsung Galaxy M02s, Adreno 506)
 
 - **Page:** https://cozy-isle.vercel.app/?lab=1
-- **When:** 2026-11-26T02:27:43.402Z
+- **When:** 2026-11-26T11:18:24.776Z
 - **Screen:** 412 x 800 CSS px at pixel ratio 1.75, mobile, touch
-- **CPU:** 6x slower (fallback (not calibrated on the real device)). Checked under load: 5.9x.
+- **CPU:** 6x slower (fallback (not calibrated on the real device)). Checked under load: 6.4x.
 - **Network:** 4g (9 Mbps down, 1.5 Mbps up, 170 ms), cold cache
 - **GPU:** real renderer was "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)" (software, so frame times are rough). The page was told: "ANGLE (Qualcomm, Adreno (TM) 506, OpenGL ES 3.2 V@415.0 (GIT@7677c8b89e Id4b4c8da21 1589356105) (Date:05/13/20))".
 
@@ -13,46 +13,46 @@ Confidence says how much a number from this cloud browser holds on the real devi
 
 | Area | Check | Value | Target | Result | Confidence |
 |---|---|---|---|---|---|
-| smooth | Average FPS during play | 9.8 fps | >= 25 | FAIL | low |
-| smooth | 95% of frames faster than | 200 ms | <= 50 | FAIL | low |
-| smooth | 99% of frames faster than | 300 ms | <= 67 | FAIL | low |
-| smooth | Frames slower than 40 ms | 88 % | <= 10 | FAIL | low |
-| smooth | Frame-to-frame change (steadiness) | 58.1 ms | <= 8 | FAIL | low |
-| smooth | Hitches over 100 ms per minute | 187.3 /min | <= 2 | FAIL | low |
-| smooth | Slowdown from start to end of steady play | 0.1 % | <= 15 | PASS | low |
-| cpu | Main thread busy during play | 10 % | <= 70 | PASS | low |
-| cpu | Longest main-thread task during play | 328 ms | <= 100 | FAIL | low |
-| cpu | Blocking time per minute during play | 442 ms/min | <= 1,000 | PASS | low |
+| smooth | Average FPS during play | 8.9 fps | >= 25 | FAIL | low |
+| smooth | 95% of frames faster than | 216.7 ms | <= 50 | FAIL | low |
+| smooth | 99% of frames faster than | 233.3 ms | <= 67 | FAIL | low |
+| smooth | Frames slower than 40 ms | 87.8 % | <= 10 | FAIL | low |
+| smooth | Frame-to-frame change (steadiness) | 69.6 ms | <= 8 | FAIL | low |
+| smooth | Hitches over 100 ms per minute | 284.3 /min | <= 2 | FAIL | low |
+| smooth | Slowdown from start to end of steady play | 0 % | <= 15 | PASS | low |
+| cpu | Main thread busy during play | 9.2 % | <= 70 | PASS | low |
+| cpu | Longest main-thread task during play | 431 ms | <= 100 | FAIL | low |
+| cpu | Blocking time per minute during play | 603 ms/min | <= 1,000 | PASS | low |
 | gpu | Draw calls per frame (95th pct) | 40 draws | <= 150 | PASS | high |
 | gpu | Triangles per frame (95th pct) | 170,734 tris | <= 250,000 | PASS | high |
 | gpu | Canvas pixels drawn each frame | 278,944 px | <= 329,600 | PASS | high |
 | gpu | Shader programs alive | 6 programs | <= 60 | PASS | high |
 | gpu | Time blocked on shader compile and link | 16.6 ms | <= 2,000 | PASS | low |
 | gpu | Textures larger than the device limit | 0 textures | <= 0 | PASS | high |
-| memory | JavaScript heap peak | 35.5 MB | <= 200 | PASS | high |
+| memory | JavaScript heap peak | 33.7 MB | <= 200 | PASS | high |
 | memory | GPU memory estimate peak | 39.5 MB | <= 200 | PASS | medium |
-| memory | Heap plus GPU estimate peak | 71.6 MB | <= 400 | PASS | medium |
-| memory | Heap growth during steady play | 1 MB/min | <= 5 | PASS | high |
+| memory | Heap plus GPU estimate peak | 73.2 MB | <= 400 | PASS | medium |
+| memory | Heap growth during steady play | 0.1 MB/min | <= 5 | PASS | high |
 | load | Downloaded on a cold load | 0.5 MB | <= 20 | PASS | high |
 | load | Requests on a cold load | 7 requests | <= 150 | PASS | high |
-| load | Time to first WebGL draw | 4,832.1 ms | <= 20,000 | PASS | low |
+| load | Time to first WebGL draw | 6,004.2 ms | <= 20,000 | PASS | low |
 | load | Time until frames are steady | - ms | <= 30,000 | N/A | low |
 
 ## Phases
 
 | Phase | Seconds | Avg FPS | p50 ms | p95 ms | p99 ms | Hitches | Long tasks | Main thread busy | Draws p95 |
 |---|---|---|---|---|---|---|---|---|---|
-| load | 1.2 | 34.5 | 16.7 | 166.7 | 166.7 | 1 | 3 | - | 0 |
-| loaded | 12.6 | 1.2 | 166.6 | 10,382.9 | 10,382.9 | 10 | 3 | 92.2% | 40 |
-| play | 17 | 8.9 | 100 | 216.7 | 333.4 | 65 | 1 | 12.5% | 40 |
-| steady | 20 | 10.5 | 99.9 | 183.4 | 200 | 51 | 0 | 7.9% | 40 |
+| load | 1.2 | 36.7 | 16.7 | 83.3 | 183.4 | 1 | 3 | 38.8% | 0 |
+| loaded | 15.4 | 1.1 | 116.6 | 13,482.8 | 13,482.8 | 9 | 3 | 93.8% | 40 |
+| play | 17.2 | 8.4 | 116.6 | 216.7 | 400.1 | 88 | 1 | 11.5% | 40 |
+| steady | 20 | 9.4 | 100 | 216.6 | 216.7 | 87 | 0 | 7.4% | 40 |
 
-Steady play, first third vs last third: p50 99.9 -> 100 ms, p95 183.3 -> 183.4 ms. Heap growth 1 MB/min, GPU estimate growth 0 MB/min.
+Steady play, first third vs last third: p50 100 -> 100 ms, p95 200 -> 216.6 ms. Heap growth 0.1 MB/min, GPU estimate growth 0 MB/min.
 
 ## Load
 
-- 0.5 MB in 7 requests (0 failed). Last byte at 1,373.1 ms.
-- First byte 210.8 ms, first paint 1,360 ms, load event 983.2 ms, first WebGL draw 4,832.1 ms, steady frames from - ms.
+- 0.5 MB in 7 requests (0 failed). Last byte at 1,370.3 ms.
+- First byte 184.8 ms, first paint 1,348 ms, load event 938.7 ms, first WebGL draw 6,004.2 ms, steady frames from - ms.
 - By type: Script 0.4 MB, Stylesheet 0.06 MB, Font 0.02 MB, Document 0 MB, Other 0 MB
 
 Largest files:
@@ -71,20 +71,21 @@ Largest files:
 - Triangles per frame: p50 170,734, p95 170,734, max 170,734
 - Canvas pixels: 278,944. Shader programs: 6 (7 links, 16.6 ms blocked, compile 0 ms).
 - Textures: 26, largest 2,048 px, over the device limit: 0.
-- Software GPU load on the cloud machine during play: 2.9 CPU cores (only useful to compare runs).
+- Software GPU load on the cloud machine during play: 3.1 CPU cores (only useful to compare runs).
 
 ## Memory
 
-- JavaScript heap peak 35.5 MB, GPU estimate peak 39.5 MB, together 71.6 MB.
+- JavaScript heap peak 33.7 MB, GPU estimate peak 39.5 MB, together 73.2 MB.
 - GPU estimate at the end: textures 38.1 MB, buffers 1.4 MB, renderbuffers 0 MB.
-- Cloud process memory (not the device): renderer 521.1 MB, GPU process 315.7 MB.
+- Cloud process memory (not the device): renderer 531.9 MB, GPU process 312.6 MB.
 
 ## Scripts in slow frames during play
 
-- o @ index-Dk-hiJCZ.js: 1216.8 ms over 125 slow frames (longest 324.1 ms)
-- x @ index-Dk-hiJCZ.js: 11.8 ms over 1 slow frames (longest 11.8 ms)
-- LO @ index-Dk-hiJCZ.js: 8.2 ms over 1 slow frames (longest 8.2 ms)
-- PerformanceObserverCallback @ : 5 ms over 1 slow frames (longest 5 ms)
+- o @ index-Dk-hiJCZ.js: 1043.4 ms over 96 slow frames (longest 426.9 ms)
+- PerformanceObserverCallback @ : 8 ms over 1 slow frames (longest 8 ms)
+- x @ index-Dk-hiJCZ.js: 7.7 ms over 1 slow frames (longest 7.7 ms)
+- FrameRequestCallback @ : 6.1 ms over 1 slow frames (longest 6.1 ms)
+- U @ index-Dk-hiJCZ.js: 5.9 ms over 1 slow frames (longest 5.9 ms)
 
 ## What this run cannot tell you
 
