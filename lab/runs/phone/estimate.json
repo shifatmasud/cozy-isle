@@ -7,23 +7,23 @@
   "fps": {
     "best": 60,
     "likely": 49.4,
-    "worst": 13.2,
+    "worst": 12.7,
     "capHz": 60
   },
   "frameMs": {
     "best": 6.7,
-    "likely": 20.3,
-    "worst": 75.5,
+    "likely": 20.2,
+    "worst": 78.8,
     "vsyncMs": 16.7
   },
   "bottleneck": "GPU",
   "device": {
-    "cpuMsPerFrame": 7.4,
-    "gpuMsPerFrame": 20.3,
+    "cpuMsPerFrame": 9.1,
+    "gpuMsPerFrame": 20.2,
     "gpuParts": {
       "drawsMs": 2.4,
       "trianglesMs": 1.02,
-      "shadingMs": 16.83,
+      "shadingMs": 16.81,
       "uploadsMs": 0
     },
     "cpuBand": [
@@ -38,24 +38,24 @@
   "workload": {
     "phase": "steady",
     "frames": 180,
-    "windowSec": 19.2,
-    "cloudFps": 9.4,
+    "windowSec": 19.3,
+    "cloudFps": 9.3,
     "drawsPerFrame": 40,
     "trisPerFrame": 170734,
     "canvasPixels": 229792,
     "uploadMbPerFrame": 0,
     "shadingRefMpPerFrame": 2.9,
-    "shadingCostPerPixel": 12.63,
-    "cloudGpuMsPerFrame": 333.7,
-    "cloudMainMsPerFrame": 7.9
+    "shadingCostPerPixel": 12.61,
+    "cloudGpuMsPerFrame": 334.7,
+    "cloudMainMsPerFrame": 9.2
   },
   "cloud": {
     "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-    "host": "ip-10-0-131-59",
+    "host": "ip-10-0-130-195",
     "coefficients": {
       "msPerRefMP": 90.003,
-      "msPerMTri": 415.625,
-      "msPerDraw": 0.0398,
+      "msPerMTri": 421.875,
+      "msPerDraw": 0.0453,
       "msPerUploadMB": 0.3906
     }
   },
@@ -69,5 +69,5 @@
   "url": "https://cozy-isle.vercel.app/?lab=1",
   "deviceId": "phone",
   "run": "../../home/runner/work/cozy-isle/cozy-isle/lab/runs/phone",
-  "at": "2026-11-26T11:18:37.325Z"
+  "at": "2026-11-26T20:17:01.232Z"
 }

@@ -1,11 +1,11 @@
 {
-  "at": "2026-11-26T11:14:43.149Z",
-  "sha": "54311289859ad8ec19bf2dab0892819ca1571b30",
+  "at": "2026-11-26T20:13:07.212Z",
+  "sha": "858408a053dd7f8095d7277194c48d96405df5c1",
   "url": "https://cozy-isle.vercel.app",
   "devices": {
     "phone": {
       "tier": "low",
-      "readyMs": 8292,
+      "readyMs": 8272,
       "overview": {
         "tier": "low",
         "dpr": 0.836,
@@ -18,8 +18,8 @@
         "geometries": 46,
         "textures": 25,
         "fpsCloud": 12,
-        "p95ms": 134.9,
-        "jsHeapMb": 18,
+        "p95ms": 180.9,
+        "jsHeapMb": 17,
         "frames": 420
       },
       "views": {
@@ -35,8 +35,8 @@
           "geometries": 44,
           "textures": 24,
           "fpsCloud": 10,
-          "p95ms": 247.1,
-          "jsHeapMb": 18,
+          "p95ms": 259.4,
+          "jsHeapMb": 17,
           "frames": 150
         },
         "meadow": {
@@ -50,9 +50,9 @@
           "programs": 6,
           "geometries": 46,
           "textures": 25,
-          "fpsCloud": 11,
-          "p95ms": 200.1,
-          "jsHeapMb": 18,
+          "fpsCloud": 10,
+          "p95ms": 205.4,
+          "jsHeapMb": 17,
           "frames": 210
         },
         "tropics": {
@@ -67,8 +67,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 7,
-          "p95ms": 374.5,
-          "jsHeapMb": 18,
+          "p95ms": 369.7,
+          "jsHeapMb": 17,
           "frames": 270
         },
         "desert": {
@@ -83,8 +83,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 7,
-          "p95ms": 296.9,
-          "jsHeapMb": 18,
+          "p95ms": 254.3,
+          "jsHeapMb": 17,
           "frames": 330
         },
         "reef": {
@@ -99,8 +99,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 12,
-          "p95ms": 134.9,
-          "jsHeapMb": 18,
+          "p95ms": 180.9,
+          "jsHeapMb": 17,
           "frames": 420
         }
       },
@@ -189,7 +189,7 @@
     },
     "laptop": {
       "tier": "medium",
-      "readyMs": 7410,
+      "readyMs": 7371,
       "overview": {
         "tier": "medium",
         "dpr": 0.836,
@@ -202,7 +202,7 @@
         "geometries": 46,
         "textures": 25,
         "fpsCloud": 2,
-        "p95ms": 857.2,
+        "p95ms": 854.8,
         "jsHeapMb": 30,
         "frames": 270
       },
@@ -219,7 +219,7 @@
           "geometries": 44,
           "textures": 24,
           "fpsCloud": 4,
-          "p95ms": 325,
+          "p95ms": 530.2,
           "jsHeapMb": 30,
           "frames": 90
         },
@@ -235,7 +235,7 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 3,
-          "p95ms": 849.3,
+          "p95ms": 845.5,
           "jsHeapMb": 30,
           "frames": 150
         },
@@ -251,7 +251,7 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 857.4,
+          "p95ms": 916.2,
           "jsHeapMb": 30,
           "frames": 180
         },
@@ -267,7 +267,7 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 857.4,
+          "p95ms": 916.2,
           "jsHeapMb": 30,
           "frames": 210
         },
@@ -283,7 +283,7 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 857.2,
+          "p95ms": 854.8,
           "jsHeapMb": 30,
           "frames": 270
         }
