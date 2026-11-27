@@ -1,11 +1,11 @@
 {
-  "at": "2026-11-27T02:53:12.647Z",
-  "sha": "d4b140588d0504516457fbe037e8b2b9d78eb2f4",
+  "at": "2026-11-27T11:38:17.993Z",
+  "sha": "0e5c15afbcc745a28f060fc7b96e592d779b3fa8",
   "url": "https://cozy-isle.vercel.app",
   "devices": {
     "phone": {
       "tier": "low",
-      "readyMs": 8315,
+      "readyMs": 8490,
       "overview": {
         "tier": "low",
         "dpr": 0.836,
@@ -13,13 +13,13 @@
         "calls": 24,
         "triangles": 94846,
         "peakCalls": 45,
-        "peakTriangles": 220188,
+        "peakTriangles": 220194,
         "programs": 6,
         "geometries": 46,
         "textures": 25,
         "fpsCloud": 9,
-        "p95ms": 252.6,
-        "jsHeapMb": 18,
+        "p95ms": 219.8,
+        "jsHeapMb": 23,
         "frames": 360
       },
       "views": {
@@ -35,8 +35,8 @@
           "geometries": 44,
           "textures": 24,
           "fpsCloud": 6,
-          "p95ms": 310.2,
-          "jsHeapMb": 18,
+          "p95ms": 311.7,
+          "jsHeapMb": 23,
           "frames": 120
         },
         "meadow": {
@@ -51,8 +51,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 8,
-          "p95ms": 285.4,
-          "jsHeapMb": 18,
+          "p95ms": 284,
+          "jsHeapMb": 23,
           "frames": 180
         },
         "tropics": {
@@ -62,13 +62,13 @@
           "calls": 44,
           "triangles": 177390,
           "peakCalls": 45,
-          "peakTriangles": 220188,
+          "peakTriangles": 220194,
           "programs": 6,
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 6,
-          "p95ms": 274.8,
-          "jsHeapMb": 18,
+          "p95ms": 485.3,
+          "jsHeapMb": 23,
           "frames": 240
         },
         "desert": {
@@ -78,13 +78,13 @@
           "calls": 27,
           "triangles": 132070,
           "peakCalls": 45,
-          "peakTriangles": 220188,
+          "peakTriangles": 220194,
           "programs": 6,
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 6,
-          "p95ms": 255.4,
-          "jsHeapMb": 18,
+          "p95ms": 377.2,
+          "jsHeapMb": 23,
           "frames": 300
         },
         "reef": {
@@ -94,13 +94,13 @@
           "calls": 24,
           "triangles": 94846,
           "peakCalls": 45,
-          "peakTriangles": 220188,
+          "peakTriangles": 220194,
           "programs": 6,
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 9,
-          "p95ms": 252.6,
-          "jsHeapMb": 18,
+          "p95ms": 219.8,
+          "jsHeapMb": 23,
           "frames": 360
         }
       },
@@ -189,7 +189,7 @@
     },
     "laptop": {
       "tier": "medium",
-      "readyMs": 7289,
+      "readyMs": 7190,
       "overview": {
         "tier": "medium",
         "dpr": 0.836,
@@ -202,8 +202,8 @@
         "geometries": 46,
         "textures": 25,
         "fpsCloud": 2,
-        "p95ms": 1081.7,
-        "jsHeapMb": 26,
+        "p95ms": 1086.9,
+        "jsHeapMb": 25,
         "frames": 240
       },
       "views": {
@@ -219,8 +219,8 @@
           "geometries": 44,
           "textures": 24,
           "fpsCloud": 3,
-          "p95ms": 674.8,
-          "jsHeapMb": 26,
+          "p95ms": 387.4,
+          "jsHeapMb": 25,
           "frames": 90
         },
         "meadow": {
@@ -234,10 +234,10 @@
           "programs": 6,
           "geometries": 46,
           "textures": 25,
-          "fpsCloud": 2,
-          "p95ms": 1075.5,
-          "jsHeapMb": 26,
-          "frames": 150
+          "fpsCloud": 3,
+          "p95ms": 473.2,
+          "jsHeapMb": 25,
+          "frames": 120
         },
         "tropics": {
           "tier": "medium",
@@ -251,8 +251,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 1081.7,
-          "jsHeapMb": 26,
+          "p95ms": 1086.9,
+          "jsHeapMb": 25,
           "frames": 180
         },
         "desert": {
@@ -267,8 +267,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 1081.7,
-          "jsHeapMb": 26,
+          "p95ms": 1086.9,
+          "jsHeapMb": 25,
           "frames": 210
         },
         "reef": {
@@ -283,8 +283,8 @@
           "geometries": 46,
           "textures": 25,
           "fpsCloud": 2,
-          "p95ms": 1081.7,
-          "jsHeapMb": 26,
+          "p95ms": 1086.9,
+          "jsHeapMb": 25,
           "frames": 240
         }
       },
@@ -380,7 +380,7 @@
         "pass": true
       },
       "triangles": {
-        "value": 220188,
+        "value": 220194,
         "target": 250000,
         "pass": true
       },
